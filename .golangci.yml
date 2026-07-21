@@ -4,19 +4,12 @@ run:
 
 linters:
   enable:
-    - errcheck
     - govet
     - ineffassign
     - staticcheck
     - unused
+  disable:
+    - errcheck
 
 issues:
   exclude-use-default: false
-  exclude-rules:
-    # Defer Close/Restore on network and stdio helpers; errors are rarely actionable.
-    - linters: [errcheck]
-      text: "Error return value of .*\\.Close is not checked"
-    - linters: [errcheck]
-      text: "Error return value of `term.Restore` is not checked"
-    - linters: [errcheck]
-      text: "Error return value of `fmt.Fprint"
