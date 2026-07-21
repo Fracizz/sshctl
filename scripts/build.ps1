@@ -2,7 +2,7 @@
 $ErrorActionPreference = "Stop"
 $Version = if ($env:VERSION) { $env:VERSION } else { "0.1.1" }
 $ld = "-s -w -X github.com/Fracizz/sshfrac/cmd.Version=$Version"
-$go = if ($env:GOEXE) { "go" } else { "go" }
+$go = "go"
 if (Test-Path "C:\Program Files\Go\bin\go.exe") {
     $env:GOROOT = "C:\Program Files\Go"
     $go = "C:\Program Files\Go\bin\go.exe"
@@ -11,38 +11,44 @@ if (Test-Path "C:\Program Files\Go\bin\go.exe") {
 if (Test-Path dist) {
     Remove-Item -Recurse -Force dist
 }
-New-Item -ItemType Directory -Force -Path dist | Out-Null
+$binDir = Join-Path dist "bin"
+New-Item -ItemType Directory -Force -Path $binDir | Out-Null
+New-Item -ItemType Directory -Force -Path bin | Out-Null
 
 $targets = @(
-    @{ GOOS = "linux"; GOARCH = "amd64"; Out = "dist/sshfrac-linux-amd64" },
-    @{ GOOS = "linux"; GOARCH = "arm64"; Out = "dist/sshfrac-linux-arm64" },
-    @{ GOOS = "windows"; GOARCH = "amd64"; Out = "dist/sshfrac-windows-amd64.exe" },
-    @{ GOOS = "windows"; GOARCH = "arm64"; Out = "dist/sshfrac-windows-arm64.exe" },
-    @{ GOOS = "darwin"; GOARCH = "amd64"; Out = "dist/sshfrac-darwin-amd64" },
-    @{ GOOS = "darwin"; GOARCH = "arm64"; Out = "dist/sshfrac-darwin-arm64" }
+    @{ GOOS = "linux"; GOARCH = "amd64"; Name = "sshfrac-linux-amd64" },
+    @{ GOOS = "linux"; GOARCH = "arm64"; Name = "sshfrac-linux-arm64" },
+    @{ GOOS = "windows"; GOARCH = "amd64"; Name = "sshfrac-windows-amd64" },
+    @{ GOOS = "windows"; GOARCH = "arm64"; Name = "sshfrac-windows-arm64" },
+    @{ GOOS = "darwin"; GOARCH = "amd64"; Name = "sshfrac-darwin-amd64" },
+    @{ GOOS = "darwin"; GOARCH = "arm64"; Name = "sshfrac-darwin-arm64" }
 )
 
 foreach ($t in $targets) {
     $env:GOOS = $t.GOOS
     $env:GOARCH = $t.GOARCH
     $env:CGO_ENABLED = "0"
-    Write-Host "building $($t.Out)"
-    & $go build -ldflags $ld -o $t.Out .
+    $outName = if ($t.GOOS -eq "windows") { "$($t.Name).exe" } else { $t.Name }
+    $outPath = Join-Path $binDir $outName
+    Write-Host "building $outPath"
+    & $go build -ldflags $ld -o $outPath .
 }
 Remove-Item Env:GOOS, Env:GOARCH -ErrorAction SilentlyContinue
 
-Get-ChildItem dist -File | ForEach-Object {
-    $bundleName = $_.BaseName
+foreach ($t in $targets) {
+    $bundleName = $t.Name
     $bundleDir = Join-Path dist $bundleName
     if (Test-Path $bundleDir) {
         Remove-Item -Recurse -Force $bundleDir
     }
     New-Item -ItemType Directory -Force -Path $bundleDir | Out-Null
 
-    if ($_.Extension -eq ".exe") {
-        Copy-Item $_.FullName (Join-Path $bundleDir "sshfrac.exe")
+    $srcName = if ($t.GOOS -eq "windows") { "$bundleName.exe" } else { $bundleName }
+    $srcPath = Join-Path $binDir $srcName
+    if ($t.GOOS -eq "windows") {
+        Copy-Item $srcPath (Join-Path $bundleDir "sshfrac.exe")
     } else {
-        Copy-Item $_.FullName (Join-Path $bundleDir "sshfrac")
+        Copy-Item $srcPath (Join-Path $bundleDir "sshfrac")
     }
 
     $zipPath = Join-Path dist "$bundleName.zip"
@@ -53,5 +59,5 @@ Get-ChildItem dist -File | ForEach-Object {
     Write-Host "packaged $zipPath"
 }
 
-Copy-Item dist/sshfrac-windows-amd64.exe bin/sshfrac.exe -Force
+Copy-Item (Join-Path $binDir "sshfrac-windows-amd64.exe") (Join-Path bin "sshfrac.exe") -Force
 Write-Host "done sshfrac $Version"
