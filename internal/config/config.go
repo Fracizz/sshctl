@@ -86,6 +86,9 @@ func Load(path string) (*File, error) {
 		s.Password = enc
 		changed = true
 	}
+	if err := f.ValidateUniqueHosts(); err != nil {
+		return nil, fmt.Errorf("config %s: %w", path, err)
+	}
 	if changed {
 		if err := Save(path, &f); err != nil {
 			return nil, err
@@ -94,8 +97,31 @@ func Load(path string) (*File, error) {
 	return &f, nil
 }
 
+// ValidateUniqueHosts reports duplicate host/IP entries in the inventory.
+func (f *File) ValidateUniqueHosts() error {
+	seen := make(map[string]string, len(f.Servers))
+	for _, s := range f.Servers {
+		host := normalizeHost(s.Host)
+		if host == "" {
+			return fmt.Errorf("server %q has empty host", s.Name)
+		}
+		if prev, ok := seen[host]; ok {
+			return fmt.Errorf("duplicate host %s (%q and %q)", s.Host, prev, s.Name)
+		}
+		seen[host] = s.Name
+	}
+	return nil
+}
+
+func normalizeHost(host string) string {
+	return strings.ToLower(strings.TrimSpace(host))
+}
+
 // Save writes JSON with indentation.
 func Save(path string, f *File) error {
+	if err := f.ValidateUniqueHosts(); err != nil {
+		return err
+	}
 	dir := filepath.Dir(path)
 	if dir != "." && dir != "" {
 		if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -186,18 +212,29 @@ func (s *Server) PlainPassword() (string, error) {
 	return crypto.Decrypt(s.Password)
 }
 
-// Add appends a server, encrypting password immediately.
-func (f *File) Add(s Server) error {
+// Add inserts or replaces the server for a host. Each host/IP may appear only once.
+// Returns true when an existing host entry was replaced.
+func (f *File) Add(s Server) (bool, error) {
+	if normalizeHost(s.Host) == "" {
+		return false, fmt.Errorf("host is required")
+	}
 	if s.Port == 0 {
 		s.Port = 22
 	}
 	if s.Password != "" && !crypto.IsEncrypted(s.Password) {
 		enc, err := crypto.Encrypt(s.Password)
 		if err != nil {
-			return err
+			return false, err
 		}
 		s.Password = enc
 	}
+	target := normalizeHost(s.Host)
+	for i := range f.Servers {
+		if normalizeHost(f.Servers[i].Host) == target {
+			f.Servers[i] = s
+			return true, nil
+		}
+	}
 	f.Servers = append(f.Servers, s)
-	return nil
+	return false, nil
 }

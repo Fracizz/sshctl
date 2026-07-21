@@ -1,5 +1,5 @@
 APP=sshfrac
-VERSION?=0.1.0
+VERSION?=0.1.1
 LDFLAGS=-s -w -X github.com/Fracizz/sshfrac/cmd.Version=$(VERSION)
 
 .PHONY: build dist tidy test clean

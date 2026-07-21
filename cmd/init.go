@@ -18,7 +18,7 @@ var initCmd = &cobra.Command{
 			return fmt.Errorf("%s already exists", path)
 		}
 		out := &config.File{}
-		if err := out.Add(config.Server{
+		if _, err := out.Add(config.Server{
 			Name:        "example-host",
 			Description: "示例：请 delete 后用 sshfrac add 写入真实主机（勿保留 REPLACE_ME）",
 			Host:        "192.0.2.10",

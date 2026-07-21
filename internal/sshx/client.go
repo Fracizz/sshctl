@@ -84,7 +84,12 @@ func authMethods(s *config.Server) ([]ssh.AuthMethod, error) {
 		if err != nil {
 			return nil, err
 		}
-		methods = append(methods, ssh.Password(plain))
+		// Use keyboard-interactive only for password-backed hosts. Registering both
+		// ssh.Password and ssh.KeyboardInteractive breaks Windows OpenSSH: after
+		// password fails the server may reject keyboard-interactive with
+		// USERAUTH_FAILURE (51) before INFO_REQUEST (60), and x/crypto/ssh returns
+		// "unexpected message type 51 (expected 60)". Interactive Windows logins
+		// also use keyboard-interactive prompts, not the password auth method.
 		methods = append(methods, ssh.KeyboardInteractive(func(user, instruction string, questions []string, echos []bool) ([]string, error) {
 			answers := make([]string, len(questions))
 			for i := range questions {

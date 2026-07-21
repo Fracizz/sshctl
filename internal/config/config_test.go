@@ -1,6 +1,7 @@
 package config_test
 
 import (
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -45,7 +46,7 @@ func TestEncryptRoundTripOnSave(t *testing.T) {
 	dir := t.TempDir()
 	path := filepath.Join(dir, "servers.json")
 	f := &config.File{}
-	if err := f.Add(config.Server{Name: "t", Host: "192.0.2.10", User: "root", Password: "secret", OS: "Linux"}); err != nil {
+	if _, err := f.Add(config.Server{Name: "t", Host: "192.0.2.10", User: "root", Password: "secret", OS: "Linux"}); err != nil {
 		t.Fatal(err)
 	}
 	if !crypto.IsEncrypted(f.Servers[0].Password) {
@@ -61,6 +62,43 @@ func TestEncryptRoundTripOnSave(t *testing.T) {
 	plain, err := loaded.Servers[0].PlainPassword()
 	if err != nil || plain != "secret" {
 		t.Fatalf("decrypt: %v %q", err, plain)
+	}
+}
+
+func TestAddReplacesDuplicateHost(t *testing.T) {
+	f := &config.File{}
+	if updated, err := f.Add(config.Server{Name: "a", Host: "192.0.2.10", User: "root", Password: "one", OS: "Linux"}); err != nil || updated {
+		t.Fatalf("first add: updated=%v err=%v", updated, err)
+	}
+	if updated, err := f.Add(config.Server{Name: "b", Host: "192.0.2.10", User: "admin", Password: "two", OS: "Windows"}); err != nil || !updated {
+		t.Fatalf("second add: updated=%v err=%v", updated, err)
+	}
+	if len(f.Servers) != 1 {
+		t.Fatalf("expected 1 server, got %d", len(f.Servers))
+	}
+	if f.Servers[0].Name != "b" || f.Servers[0].User != "admin" {
+		t.Fatalf("unexpected server: %#v", f.Servers[0])
+	}
+	if err := f.ValidateUniqueHosts(); err != nil {
+		t.Fatal(err)
+	}
+}
+
+func TestLoadRejectsDuplicateHost(t *testing.T) {
+	dir := t.TempDir()
+	path := filepath.Join(dir, "servers.json")
+	raw := `{
+  "servers": [
+    {"name":"a","host":"192.0.2.10","port":22,"user":"root","password":"","os":"Linux"},
+    {"name":"b","host":"192.0.2.10","port":22,"user":"admin","password":"","os":"Windows"}
+  ]
+}
+`
+	if err := os.WriteFile(path, []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := config.Load(path); err == nil {
+		t.Fatal("expected duplicate host error")
 	}
 }
 

@@ -43,7 +43,7 @@ var addCmd = &cobra.Command{
 			}
 			f = loaded
 		}
-		if err := f.Add(config.Server{
+		updated, err := f.Add(config.Server{
 			Name:        addName,
 			Description: addDescription,
 			Host:        addHost,
@@ -52,13 +52,18 @@ var addCmd = &cobra.Command{
 			Password:    addPassword,
 			OS:          addOS,
 			KeyFile:     addKeyFile,
-		}); err != nil {
+		})
+		if err != nil {
 			return err
 		}
 		if err := config.Save(path, f); err != nil {
 			return err
 		}
-		fmt.Printf("added %s (%s@%s) -> %s\n", addName, addUser, addHost, path)
+		verb := "added"
+		if updated {
+			verb = "updated"
+		}
+		fmt.Printf("%s %s (%s@%s) -> %s\n", verb, addName, addUser, addHost, path)
 		return nil
 	},
 }
