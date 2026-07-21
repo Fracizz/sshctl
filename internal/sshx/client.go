@@ -13,7 +13,7 @@ import (
 	"golang.org/x/crypto/ssh/knownhosts"
 	"golang.org/x/term"
 
-	"github.com/Fracizz/invossh/internal/config"
+	"github.com/Fracizz/sshfrac/internal/config"
 )
 
 const copyBufSize = 256 * 1024

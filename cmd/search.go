@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Fracizz/invossh/internal/config"
+	"github.com/Fracizz/sshfrac/internal/config"
 )
 
 var searchQuery string
@@ -16,16 +16,16 @@ var searchCmd = &cobra.Command{
 	Use:     "search",
 	Aliases: []string{"find"},
 	Short:   "Case-insensitive contains search on name / IP / description",
-	Example: `  invossh search -s 157
-  invossh search --search 客制化
-  invossh search -s 212`,
+	Example: `  sshfrac search -s 157
+  sshfrac search --search 客制化
+  sshfrac search -s 212`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		q := searchQuery
 		if q == "" && len(args) > 0 {
 			q = args[0]
 		}
 		if q == "" {
-			return fmt.Errorf("missing query; use: invossh search -s <keyword>")
+			return fmt.Errorf("missing query; use: sshfrac search -s <keyword>")
 		}
 		path := config.ResolvePath(cfgPath)
 		f, err := config.Load(path)

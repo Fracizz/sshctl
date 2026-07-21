@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Fracizz/invossh/internal/crypto"
+	"github.com/Fracizz/sshfrac/internal/crypto"
 )
 
 // Server is one SSH endpoint entry.
@@ -27,34 +27,35 @@ type File struct {
 	Servers []Server `json:"servers"`
 }
 
-// DefaultConfigPath returns ~/.invossh/servers.json (outside any repo).
-// Falls back to legacy ~/.sshctl/servers.json if the new path does not exist yet.
+// DefaultConfigPath returns ~/.sshfrac/servers.json (outside any repo).
+// Falls back to legacy ~/.invossh or ~/.sshctl if present.
 func DefaultConfigPath() string {
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
-		return filepath.Join(".invossh", "servers.json")
+		return filepath.Join(".sshfrac", "servers.json")
 	}
-	primary := filepath.Join(home, ".invossh", "servers.json")
+	primary := filepath.Join(home, ".sshfrac", "servers.json")
 	if _, err := os.Stat(primary); err == nil {
 		return primary
 	}
-	legacy := filepath.Join(home, ".sshctl", "servers.json")
-	if _, err := os.Stat(legacy); err == nil {
-		return legacy
+	for _, dir := range []string{".invossh", ".sshctl"} {
+		legacy := filepath.Join(home, dir, "servers.json")
+		if _, err := os.Stat(legacy); err == nil {
+			return legacy
+		}
 	}
 	return primary
 }
 
-// ResolvePath picks config path: flag > INVOSSH_CONFIG > SSHCTL_CONFIG > default.
+// ResolvePath picks config path: flag > SSHFRAC_CONFIG > INVOSSH_CONFIG > SSHCTL_CONFIG > default.
 func ResolvePath(flagPath string) string {
 	if flagPath != "" {
 		return flagPath
 	}
-	if env := os.Getenv("INVOSSH_CONFIG"); env != "" {
-		return env
-	}
-	if env := os.Getenv("SSHCTL_CONFIG"); env != "" {
-		return env
+	for _, key := range []string{"SSHFRAC_CONFIG", "INVOSSH_CONFIG", "SSHCTL_CONFIG"} {
+		if env := os.Getenv(key); env != "" {
+			return env
+		}
 	}
 	return DefaultConfigPath()
 }
@@ -154,7 +155,7 @@ func (f *File) Find(query string) (*Server, error) {
 	case 0:
 		return nil, fmt.Errorf("server not found: %s", query)
 	default:
-		return nil, fmt.Errorf("ambiguous server %q: %d matches (use invossh search -s %q)", query, len(hits), query)
+		return nil, fmt.Errorf("ambiguous server %q: %d matches (use sshfrac search -s %q)", query, len(hits), query)
 	}
 }
 

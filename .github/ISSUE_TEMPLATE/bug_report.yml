@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a bug in invossh
+description: Report a bug in sshfrac
 labels: ["bug"]
 body:
   - type: markdown
@@ -16,8 +16,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: invossh version
-      placeholder: "invossh version"
+      label: sshfrac version
+      placeholder: "sshfrac version"
     validations:
       required: true
   - type: dropdown

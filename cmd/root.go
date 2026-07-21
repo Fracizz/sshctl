@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Fracizz/invossh/internal/crypto"
+	"github.com/Fracizz/sshfrac/internal/crypto"
 )
 
 var (
@@ -19,23 +19,23 @@ var (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "invossh",
+	Use:   "sshfrac",
 	Short: "AI-friendly SSH/SCP CLI with encrypted server inventory",
-	Long: `invossh is a cross-platform SSH/SCP CLI designed primarily for AI agents.
+	Long: `sshfrac is a cross-platform SSH/SCP CLI designed primarily for AI agents.
 
 Exit codes:
   0   success
   1   local runtime error (dial, decrypt, I/O, …)
   2   usage / config error
-  N   remote command exit status (invossh exec only, when available)
+  N   remote command exit status (sshfrac exec only, when available)
 
 Master password (recommended on shared machines):
-  --master-password / INVOSSH_MASTER_PASSWORD  → enc:v2 (Argon2id + AES-GCM)
-  --bind-machine / INVOSSH_BIND_MACHINE=1      → also bind v2 keys to this machine
+  --master-password / SSHFRAC_MASTER_PASSWORD  → enc:v2 (Argon2id + AES-GCM)
+  --bind-machine / SSHFRAC_BIND_MACHINE=1      → also bind v2 keys to this machine
   Without a master password, new secrets use legacy enc:v1 (machine-derived).
 
 Shell completion:
-  invossh completion bash|zsh|fish|powershell`,
+  sshfrac completion bash|zsh|fish|powershell`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Version:       Version,
@@ -59,12 +59,12 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "path to servers JSON (default: ~/.invossh/servers.json or $INVOSSH_CONFIG)")
+	rootCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "path to servers JSON (default: ~/.sshfrac/servers.json or $SSHFRAC_CONFIG)")
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip SSH host key verification (unsafe; for lab only)")
-	rootCmd.PersistentFlags().StringVar(&masterPassword, "master-password", "", "master password for enc:v2 (or set INVOSSH_MASTER_PASSWORD)")
-	rootCmd.PersistentFlags().BoolVar(&bindMachine, "bind-machine", false, "mix machine identity into enc:v2 KDF (or INVOSSH_BIND_MACHINE=1)")
+	rootCmd.PersistentFlags().StringVar(&masterPassword, "master-password", "", "master password for enc:v2 (or set SSHFRAC_MASTER_PASSWORD)")
+	rootCmd.PersistentFlags().BoolVar(&bindMachine, "bind-machine", false, "mix machine identity into enc:v2 KDF (or SSHFRAC_BIND_MACHINE=1)")
 
-	rootCmd.SetVersionTemplate("invossh {{.Version}}\n")
+	rootCmd.SetVersionTemplate("sshfrac {{.Version}}\n")
 	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(searchCmd)
@@ -79,6 +79,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("invossh %s\n", Version)
+		fmt.Printf("sshfrac %s\n", Version)
 	},
 }

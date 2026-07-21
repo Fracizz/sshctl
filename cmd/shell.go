@@ -5,8 +5,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Fracizz/invossh/internal/config"
-	"github.com/Fracizz/invossh/internal/sshx"
+	"github.com/Fracizz/sshfrac/internal/config"
+	"github.com/Fracizz/sshfrac/internal/sshx"
 )
 
 var shellTimeout time.Duration

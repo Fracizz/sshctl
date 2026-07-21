@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Fracizz/invossh/internal/config"
-	"github.com/Fracizz/invossh/internal/crypto"
+	"github.com/Fracizz/sshfrac/internal/config"
+	"github.com/Fracizz/sshfrac/internal/crypto"
 )
 
 func TestSearchCaseInsensitiveContains(t *testing.T) {
@@ -73,22 +73,23 @@ func TestDefaultConfigPathOutsideCwd(t *testing.T) {
 		t.Fatalf("base: %s", p)
 	}
 	dir := filepath.Base(filepath.Dir(p))
-	if dir != ".invossh" && dir != ".sshctl" {
+	if dir != ".sshfrac" && dir != ".invossh" && dir != ".sshctl" {
 		t.Fatalf("dir: %s", p)
 	}
 }
 
 func TestResolvePathPriority(t *testing.T) {
+	t.Setenv("SSHFRAC_CONFIG", "")
 	t.Setenv("INVOSSH_CONFIG", "")
 	t.Setenv("SSHCTL_CONFIG", "")
 	if got := config.ResolvePath("/tmp/custom.json"); got != "/tmp/custom.json" {
 		t.Fatalf("flag: %s", got)
 	}
-	t.Setenv("INVOSSH_CONFIG", "/env/servers.json")
+	t.Setenv("SSHFRAC_CONFIG", "/env/servers.json")
 	if got := config.ResolvePath(""); got != "/env/servers.json" {
 		t.Fatalf("env: %s", got)
 	}
-	t.Setenv("INVOSSH_CONFIG", "")
+	t.Setenv("SSHFRAC_CONFIG", "")
 	t.Setenv("SSHCTL_CONFIG", "/legacy/servers.json")
 	if got := config.ResolvePath(""); got != "/legacy/servers.json" {
 		t.Fatalf("legacy env: %s", got)

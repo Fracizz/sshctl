@@ -1,4 +1,4 @@
-module github.com/Fracizz/invossh
+module github.com/Fracizz/sshfrac
 
 go 1.23.0
 

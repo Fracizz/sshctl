@@ -1,10 +1,8 @@
-# invossh
+# sshfrac
 
-> **Note:** Renamed from sshctl to avoid ecosystem name collisions. Legacy env SSHCTL_* and config dir ~/.sshctl are still accepted.
+> Formerly `sshctl` / `invossh`. Legacy env (`SSHCTL_*`, `INVOSSH_*`) and config dirs (`~/.sshctl`, `~/.invossh`) are still accepted.
 
-> Renamed from `sshctl` to avoid widespread name collisions (PyPI/AUR/GitHub).
-
-**English** | [中文](#invossh-中文)
+**English** | [中文](#sshfrac-中文)
 
 High-performance cross-platform SSH/SCP CLI with an encrypted local server inventory.
 
@@ -21,11 +19,11 @@ Humans can use it too — the UX prioritizes machine-friendly flags, exit codes,
 - AES-256-GCM encrypted passwords at rest (`enc:v1:`)
 - Case-insensitive contains search on name / IP / description
 - Host key verification via `~/.ssh/known_hosts` (optional `--insecure` for labs)
-- Default config outside the repo: `~/.invossh/servers.json`
+- Default config outside the repo: `~/.sshfrac/servers.json`
 
 ## Why AI-first?
 
-| Need | How invossh helps |
+| Need | How sshfrac helps |
 |------|------------------|
 | Non-interactive | `exec` / `scp` / `list` / `search` — no TTY prompts for common flows |
 | Discover hosts | `search -s <keyword>` on name, IP, description |
@@ -35,47 +33,47 @@ Humans can use it too — the UX prioritizes machine-friendly flags, exit codes,
 ## Install
 
 ```bash
-go install github.com/Fracizz/invossh@latest
+go install github.com/Fracizz/sshfrac@latest
 ```
 
 Or from source:
 
 ```bash
-git clone https://github.com/Fracizz/invossh.git
-cd invossh
-go build -o bin/invossh .
+git clone https://github.com/Fracizz/sshfrac.git
+cd sshfrac
+go build -o bin/sshfrac .
 ```
 
 ## Quick start
 
 ```bash
-# Create ~/.invossh/servers.json (placeholder only — no real secrets)
-invossh init
+# Create ~/.sshfrac/servers.json (placeholder only — no real secrets)
+sshfrac init
 
 # Add a host (password is encrypted on save)
-invossh add --name lab --host 192.0.2.10 --user root --password 'secret' --desc "lab box"
+sshfrac add --name lab --host 192.0.2.10 --user root --password 'secret' --desc "lab box"
 
 # Or key-based auth
-invossh add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --desc "prod"
+sshfrac add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --desc "prod"
 
-invossh list
-invossh search -s 192.0.2
-invossh exec lab -- hostname
-invossh shell lab
-invossh scp ./app.tar.gz lab:/tmp/app.tar.gz
+sshfrac list
+sshfrac search -s 192.0.2
+sshfrac exec lab -- hostname
+sshfrac shell lab
+sshfrac scp ./app.tar.gz lab:/tmp/app.tar.gz
 ```
 
-Config path priority: `--config` > `$INVOSSH_CONFIG` > `~/.invossh/servers.json`
+Config path priority: `--config` > `$SSHFRAC_CONFIG` > `~/.sshfrac/servers.json`
 
 ### Master password (enc:v2)
 
 ```bash
-export INVOSSH_MASTER_PASSWORD='your-strong-secret'
+export SSHFRAC_MASTER_PASSWORD='your-strong-secret'
 # optional: also bind ciphertext to this machine
-export INVOSSH_BIND_MACHINE=1
+export SSHFRAC_BIND_MACHINE=1
 
-invossh add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "lab"
-invossh exec lab -- hostname
+sshfrac add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "lab"
+sshfrac exec lab -- hostname
 ```
 
 Or pass `--master-password` / `--bind-machine` on each invocation. See [SECURITY.md](SECURITY.md).
@@ -90,9 +88,9 @@ Or pass `--master-password` / `--bind-machine` on each invocation. See [SECURITY
 | N | remote process status (`exec`) |
 
 ```bash
-invossh version
-invossh completion powershell > invossh.ps1
-invossh completion bash > /etc/bash_completion.d/invossh
+sshfrac version
+sshfrac completion powershell > sshfrac.ps1
+sshfrac completion bash > /etc/bash_completion.d/sshfrac
 ```
 
 First SSH to a host should populate OpenSSH `known_hosts` (or pass `--insecure` only in trusted labs).
@@ -127,7 +125,7 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-# invossh (中文)
+# sshfrac (中文)
 
 高性能跨平台 SSH/SCP 命令行工具，带本地加密主机清单。
 
@@ -144,11 +142,11 @@ MIT — see [LICENSE](LICENSE).
 - 密码落盘 AES-256-GCM 加密（`enc:v1:`）
 - 对 name / IP / description 不区分大小写的包含搜索
 - 默认校验 `~/.ssh/known_hosts`（实验环境可用 `--insecure`）
-- 配置默认在仓库外：`~/.invossh/servers.json`
+- 配置默认在仓库外：`~/.sshfrac/servers.json`
 
 ## 为何适合 AI？
 
-| 需求 | invossh 的做法 |
+| 需求 | sshfrac 的做法 |
 |------|----------------|
 | 非交互 | `exec` / `scp` / `list` / `search`，常见流程不弹密码提示 |
 | 找机器 | `search -s <关键词>` 匹配名称、IP、描述 |
@@ -158,40 +156,40 @@ MIT — see [LICENSE](LICENSE).
 ## 安装
 
 ```bash
-go install github.com/Fracizz/invossh@latest
+go install github.com/Fracizz/sshfrac@latest
 ```
 
 或源码编译：
 
 ```bash
-git clone https://github.com/Fracizz/invossh.git
-cd invossh
-go build -o bin/invossh .
+git clone https://github.com/Fracizz/sshfrac.git
+cd sshfrac
+go build -o bin/sshfrac .
 ```
 
 ## 快速开始
 
 ```bash
-invossh init
-invossh add --name lab --host 192.0.2.10 --user root --password 'secret' --desc "实验机"
-invossh add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --desc "生产"
+sshfrac init
+sshfrac add --name lab --host 192.0.2.10 --user root --password 'secret' --desc "实验机"
+sshfrac add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --desc "生产"
 
-invossh list
-invossh search -s 192.0.2
-invossh exec lab -- hostname
-invossh shell lab
-invossh scp ./app.tar.gz lab:/tmp/app.tar.gz
+sshfrac list
+sshfrac search -s 192.0.2
+sshfrac exec lab -- hostname
+sshfrac shell lab
+sshfrac scp ./app.tar.gz lab:/tmp/app.tar.gz
 ```
 
-配置优先级：`--config` > `$INVOSSH_CONFIG` > `~/.invossh/servers.json`
+配置优先级：`--config` > `$SSHFRAC_CONFIG` > `~/.sshfrac/servers.json`
 
 ### 主密码（enc:v2）
 
 ```bash
-export INVOSSH_MASTER_PASSWORD='强密码'
-export INVOSSH_BIND_MACHINE=1   # 可选：绑定本机
+export SSHFRAC_MASTER_PASSWORD='强密码'
+export SSHFRAC_BIND_MACHINE=1   # 可选：绑定本机
 
-invossh add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "实验机"
+sshfrac add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "实验机"
 ```
 
 详见 [SECURITY.md](SECURITY.md)。
@@ -205,8 +203,8 @@ invossh add --name lab --host 192.0.2.10 --user root --password 'host-pass' --de
 | N | 远端进程状态（`exec`） |
 
 ```bash
-invossh version
-invossh completion powershell > invossh.ps1
+sshfrac version
+sshfrac completion powershell > sshfrac.ps1
 ```
 
 首次连接请先写入 OpenSSH `known_hosts`（或仅在可信实验环境使用 `--insecure`）。

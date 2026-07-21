@@ -7,8 +7,8 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Fracizz/invossh/internal/config"
-	"github.com/Fracizz/invossh/internal/sshx"
+	"github.com/Fracizz/sshfrac/internal/config"
+	"github.com/Fracizz/sshfrac/internal/sshx"
 )
 
 var scpTimeout time.Duration
@@ -19,9 +19,9 @@ var scpCmd = &cobra.Command{
 	Long: `Copy files between local and remote hosts.
 
 Examples:
-  invossh scp ./a.txt example-host:/tmp/a.txt
-  invossh scp example-host:/etc/hosts ./hosts
-  invossh scp ./dir example-host:/tmp/dir
+  sshfrac scp ./a.txt example-host:/tmp/a.txt
+  sshfrac scp example-host:/etc/hosts ./hosts
+  sshfrac scp ./dir example-host:/tmp/dir
 `,
 	Args: cobra.ExactArgs(2),
 	RunE: func(cmd *cobra.Command, args []string) error {
