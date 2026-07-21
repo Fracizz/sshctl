@@ -204,9 +204,7 @@ func Download(client *ssh.Client, remotePath, localPath string) error {
 }
 
 func uploadFile(c *sftp.Client, src *os.File, remotePath string, mode os.FileMode) error {
-	if err := c.MkdirAll(filepath.ToSlash(filepath.Dir(remotePath))); err != nil {
-		// remote may already exist; continue and let Create fail clearly
-	}
+	_ = c.MkdirAll(filepath.ToSlash(filepath.Dir(remotePath)))
 	dst, err := c.OpenFile(remotePath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC)
 	if err != nil {
 		return err
