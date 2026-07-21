@@ -6,24 +6,32 @@ Thanks for contributing to sshctl.
 
 ```bash
 go test ./...
+go vet ./...
 go build -o bin/sshctl .
+```
+
+Optional lint (same as CI):
+
+```bash
+golangci-lint run
 ```
 
 Cross-build:
 
 ```bash
 make dist
-# or on Windows:
+# Windows:
 powershell -File scripts/build.ps1
 ```
 
 ## Pull requests
 
-- Keep changes focused; avoid unrelated refactors.
-- Add/adjust tests for config, search, and crypto helpers when behavior changes.
-- Do not commit `~/.sshctl/servers.json`, binaries under `bin/`/`dist/`, or real credentials.
+- Keep changes focused.
+- Add/adjust tests for config, search, and crypto when behavior changes.
+- Never commit `~/.sshctl/servers.json`, `bin/`, `dist/`, or real credentials.
+- Prefer English for new CLI help strings; README may stay bilingual.
 - Run `go test ./...` before opening a PR.
 
 ## Code style
 
-Follow standard Go formatting (`gofmt` / `go fmt ./...`).
+`gofmt` / `go fmt ./...`.

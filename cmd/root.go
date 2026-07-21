@@ -5,21 +5,48 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	"github.com/Fracizz/sshctl/internal/crypto"
 )
 
 var (
-	cfgPath  string
-	insecure bool
+	cfgPath        string
+	insecure       bool
+	masterPassword string
+	bindMachine    bool
 	// Version is overwritten by -ldflags at build time.
-	Version = "0.2.0"
+	Version = "0.1.0"
 )
 
 var rootCmd = &cobra.Command{
-	Use:           "sshctl",
-	Short:         "AI-friendly SSH/SCP CLI with encrypted server inventory",
+	Use:   "sshctl",
+	Short: "AI-friendly SSH/SCP CLI with encrypted server inventory",
+	Long: `sshctl is a cross-platform SSH/SCP CLI designed primarily for AI agents.
+
+Exit codes:
+  0   success
+  1   local runtime error (dial, decrypt, I/O, …)
+  2   usage / config error
+  N   remote command exit status (sshctl exec only, when available)
+
+Master password (recommended on shared machines):
+  --master-password / SSHCTL_MASTER_PASSWORD  → enc:v2 (Argon2id + AES-GCM)
+  --bind-machine / SSHCTL_BIND_MACHINE=1      → also bind v2 keys to this machine
+  Without a master password, new secrets use legacy enc:v1 (machine-derived).
+
+Shell completion:
+  sshctl completion bash|zsh|fish|powershell`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Version:       Version,
+	PersistentPreRun: func(cmd *cobra.Command, args []string) {
+		if masterPassword != "" {
+			crypto.SetMasterPassword(masterPassword)
+		}
+		if cmd.Flags().Changed("bind-machine") {
+			crypto.SetBindMachine(bindMachine)
+		}
+	},
 }
 
 // Execute runs the root command.
@@ -34,6 +61,11 @@ func Execute() error {
 func init() {
 	rootCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "path to servers JSON (default: ~/.sshctl/servers.json or $SSHCTL_CONFIG)")
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip SSH host key verification (unsafe; for lab only)")
+	rootCmd.PersistentFlags().StringVar(&masterPassword, "master-password", "", "master password for enc:v2 (or set SSHCTL_MASTER_PASSWORD)")
+	rootCmd.PersistentFlags().BoolVar(&bindMachine, "bind-machine", false, "mix machine identity into enc:v2 KDF (or SSHCTL_BIND_MACHINE=1)")
+
+	rootCmd.SetVersionTemplate("sshctl {{.Version}}\n")
+	rootCmd.AddCommand(versionCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(addCmd)
@@ -41,4 +73,12 @@ func init() {
 	rootCmd.AddCommand(shellCmd)
 	rootCmd.AddCommand(scpCmd)
 	rootCmd.AddCommand(initCmd)
+}
+
+var versionCmd = &cobra.Command{
+	Use:   "version",
+	Short: "Print version",
+	Run: func(cmd *cobra.Command, args []string) {
+		fmt.Printf("sshctl %s\n", Version)
+	},
 }

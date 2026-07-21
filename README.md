@@ -63,6 +63,34 @@ sshctl scp ./app.tar.gz lab:/tmp/app.tar.gz
 
 Config path priority: `--config` > `$SSHCTL_CONFIG` > `~/.sshctl/servers.json`
 
+### Master password (enc:v2)
+
+```bash
+export SSHCTL_MASTER_PASSWORD='your-strong-secret'
+# optional: also bind ciphertext to this machine
+export SSHCTL_BIND_MACHINE=1
+
+sshctl add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "lab"
+sshctl exec lab -- hostname
+```
+
+Or pass `--master-password` / `--bind-machine` on each invocation. See [SECURITY.md](SECURITY.md).
+
+### Exit codes & completion
+
+| Code | Meaning |
+|------|---------|
+| 0 | success |
+| 1 | local error |
+| 2 | usage (documented; reserved) |
+| N | remote process status (`exec`) |
+
+```bash
+sshctl version
+sshctl completion powershell > sshctl.ps1
+sshctl completion bash > /etc/bash_completion.d/sshctl
+```
+
 First SSH to a host should populate OpenSSH `known_hosts` (or pass `--insecure` only in trusted labs).
 
 ## JSON format
@@ -152,6 +180,30 @@ sshctl scp ./app.tar.gz lab:/tmp/app.tar.gz
 ```
 
 配置优先级：`--config` > `$SSHCTL_CONFIG` > `~/.sshctl/servers.json`
+
+### 主密码（enc:v2）
+
+```bash
+export SSHCTL_MASTER_PASSWORD='强密码'
+export SSHCTL_BIND_MACHINE=1   # 可选：绑定本机
+
+sshctl add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "实验机"
+```
+
+详见 [SECURITY.md](SECURITY.md)。
+
+### 退出码与补全
+
+| 码 | 含义 |
+|----|------|
+| 0 | 成功 |
+| 1 | 本地错误 |
+| N | 远端进程状态（`exec`） |
+
+```bash
+sshctl version
+sshctl completion powershell > sshctl.ps1
+```
 
 首次连接请先写入 OpenSSH `known_hosts`（或仅在可信实验环境使用 `--insecure`）。
 

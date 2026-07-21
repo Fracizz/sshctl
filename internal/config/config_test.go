@@ -73,3 +73,18 @@ func TestDefaultConfigPathOutsideCwd(t *testing.T) {
 		t.Fatalf("dir: %s", p)
 	}
 }
+
+func TestResolvePathPriority(t *testing.T) {
+	t.Setenv("SSHCTL_CONFIG", "")
+	if got := config.ResolvePath("/tmp/custom.json"); got != "/tmp/custom.json" {
+		t.Fatalf("flag: %s", got)
+	}
+	t.Setenv("SSHCTL_CONFIG", "/env/servers.json")
+	if got := config.ResolvePath(""); got != "/env/servers.json" {
+		t.Fatalf("env: %s", got)
+	}
+	t.Setenv("SSHCTL_CONFIG", "")
+	if got := config.ResolvePath(""); filepath.Base(got) != "servers.json" {
+		t.Fatalf("default: %s", got)
+	}
+}

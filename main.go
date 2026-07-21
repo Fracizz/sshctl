@@ -4,10 +4,11 @@ import (
 	"os"
 
 	"github.com/Fracizz/sshctl/cmd"
+	"github.com/Fracizz/sshctl/internal/exitcode"
 )
 
 func main() {
 	if err := cmd.Execute(); err != nil {
-		os.Exit(1)
+		os.Exit(exitcode.ExecFailed)
 	}
 }
