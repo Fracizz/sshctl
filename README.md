@@ -1,5 +1,7 @@
 # invossh
 
+> Renamed from `sshctl` to avoid widespread name collisions (PyPI/AUR/GitHub).
+
 **English** | [中文](#invossh-中文)
 
 High-performance cross-platform SSH/SCP CLI with an encrypted local server inventory.
@@ -214,3 +216,4 @@ invossh completion powershell > invossh.ps1
 ## 许可证
 
 MIT — 见 [LICENSE](LICENSE)。
+
