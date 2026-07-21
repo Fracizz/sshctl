@@ -1,6 +1,6 @@
 # Cross-build sshfrac for Linux / Windows / macOS and package release zips.
 $ErrorActionPreference = "Stop"
-$Version = if ($env:VERSION) { $env:VERSION } else { "0.1.1" }
+$Version = if ($env:VERSION) { $env:VERSION } else { "0.1.2" }
 $ld = "-s -w -X github.com/Fracizz/sshfrac/cmd.Version=$Version"
 $go = "go"
 if (Test-Path "C:\Program Files\Go\bin\go.exe") {
