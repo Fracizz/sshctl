@@ -1,6 +1,6 @@
-APP=sshctl
+APP=invossh
 VERSION?=0.1.0
-LDFLAGS=-s -w -X github.com/Fracizz/sshctl/cmd.Version=$(VERSION)
+LDFLAGS=-s -w -X github.com/Fracizz/invossh/cmd.Version=$(VERSION)
 
 .PHONY: build dist tidy test clean
 

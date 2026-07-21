@@ -5,5 +5,5 @@
 ## Test plan
 
 - [ ] `go test ./...`
-- [ ] Manual: `sshctl list` / `search` / `exec` as needed
+- [ ] Manual: `invossh list` / `search` / `exec` as needed
 - [ ] No secrets in the diff (`servers.json`, passwords, tokens)

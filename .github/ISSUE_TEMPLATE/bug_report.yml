@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a bug in sshctl
+description: Report a bug in invossh
 labels: ["bug"]
 body:
   - type: markdown
@@ -16,8 +16,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: sshctl version
-      placeholder: "sshctl version"
+      label: invossh version
+      placeholder: "invossh version"
     validations:
       required: true
   - type: dropdown

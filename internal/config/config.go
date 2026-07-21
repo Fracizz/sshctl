@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Fracizz/sshctl/internal/crypto"
+	"github.com/Fracizz/invossh/internal/crypto"
 )
 
 // Server is one SSH endpoint entry.
@@ -27,19 +27,31 @@ type File struct {
 	Servers []Server `json:"servers"`
 }
 
-// DefaultConfigPath returns ~/.sshctl/servers.json (outside any repo).
+// DefaultConfigPath returns ~/.invossh/servers.json (outside any repo).
+// Falls back to legacy ~/.sshctl/servers.json if the new path does not exist yet.
 func DefaultConfigPath() string {
 	home, err := os.UserHomeDir()
 	if err != nil || home == "" {
-		return filepath.Join(".sshctl", "servers.json")
+		return filepath.Join(".invossh", "servers.json")
 	}
-	return filepath.Join(home, ".sshctl", "servers.json")
+	primary := filepath.Join(home, ".invossh", "servers.json")
+	if _, err := os.Stat(primary); err == nil {
+		return primary
+	}
+	legacy := filepath.Join(home, ".sshctl", "servers.json")
+	if _, err := os.Stat(legacy); err == nil {
+		return legacy
+	}
+	return primary
 }
 
-// ResolvePath picks config path: flag > SSHCTL_CONFIG > ~/.sshctl/servers.json.
+// ResolvePath picks config path: flag > INVOSSH_CONFIG > SSHCTL_CONFIG > default.
 func ResolvePath(flagPath string) string {
 	if flagPath != "" {
 		return flagPath
+	}
+	if env := os.Getenv("INVOSSH_CONFIG"); env != "" {
+		return env
 	}
 	if env := os.Getenv("SSHCTL_CONFIG"); env != "" {
 		return env
@@ -142,7 +154,7 @@ func (f *File) Find(query string) (*Server, error) {
 	case 0:
 		return nil, fmt.Errorf("server not found: %s", query)
 	default:
-		return nil, fmt.Errorf("ambiguous server %q: %d matches (use sshctl search -s %q)", query, len(hits), query)
+		return nil, fmt.Errorf("ambiguous server %q: %d matches (use invossh search -s %q)", query, len(hits), query)
 	}
 }
 

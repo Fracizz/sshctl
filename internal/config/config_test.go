@@ -4,8 +4,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Fracizz/sshctl/internal/config"
-	"github.com/Fracizz/sshctl/internal/crypto"
+	"github.com/Fracizz/invossh/internal/config"
+	"github.com/Fracizz/invossh/internal/crypto"
 )
 
 func TestSearchCaseInsensitiveContains(t *testing.T) {
@@ -65,26 +65,32 @@ func TestEncryptRoundTripOnSave(t *testing.T) {
 }
 
 func TestDefaultConfigPathOutsideCwd(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("HOME", home)
 	p := config.DefaultConfigPath()
 	if filepath.Base(p) != "servers.json" {
 		t.Fatalf("base: %s", p)
 	}
-	if filepath.Base(filepath.Dir(p)) != ".sshctl" {
+	dir := filepath.Base(filepath.Dir(p))
+	if dir != ".invossh" && dir != ".sshctl" {
 		t.Fatalf("dir: %s", p)
 	}
 }
 
 func TestResolvePathPriority(t *testing.T) {
+	t.Setenv("INVOSSH_CONFIG", "")
 	t.Setenv("SSHCTL_CONFIG", "")
 	if got := config.ResolvePath("/tmp/custom.json"); got != "/tmp/custom.json" {
 		t.Fatalf("flag: %s", got)
 	}
-	t.Setenv("SSHCTL_CONFIG", "/env/servers.json")
+	t.Setenv("INVOSSH_CONFIG", "/env/servers.json")
 	if got := config.ResolvePath(""); got != "/env/servers.json" {
 		t.Fatalf("env: %s", got)
 	}
-	t.Setenv("SSHCTL_CONFIG", "")
-	if got := config.ResolvePath(""); filepath.Base(got) != "servers.json" {
-		t.Fatalf("default: %s", got)
+	t.Setenv("INVOSSH_CONFIG", "")
+	t.Setenv("SSHCTL_CONFIG", "/legacy/servers.json")
+	if got := config.ResolvePath(""); got != "/legacy/servers.json" {
+		t.Fatalf("legacy env: %s", got)
 	}
 }

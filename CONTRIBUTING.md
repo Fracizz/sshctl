@@ -1,13 +1,13 @@
 # Contributing
 
-Thanks for contributing to sshctl.
+Thanks for contributing to invossh.
 
 ## Development
 
 ```bash
 go test ./...
 go vet ./...
-go build -o bin/sshctl .
+go build -o bin/invossh .
 ```
 
 Optional lint (same as CI):
@@ -28,7 +28,7 @@ powershell -File scripts/build.ps1
 
 - Keep changes focused.
 - Add/adjust tests for config, search, and crypto when behavior changes.
-- Never commit `~/.sshctl/servers.json`, `bin/`, `dist/`, or real credentials.
+- Never commit `~/.invossh/servers.json`, `bin/`, `dist/`, or real credentials.
 - Prefer English for new CLI help strings; README may stay bilingual.
 - Run `go test ./...` before opening a PR.
 

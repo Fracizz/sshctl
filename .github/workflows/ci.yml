@@ -61,8 +61,8 @@ jobs:
         run: |
           ext=""
           if [ "$GOOS" = "windows" ]; then ext=".exe"; fi
-          go build -ldflags "-s -w -X github.com/Fracizz/sshctl/cmd.Version=ci" -o "sshctl-${GOOS}-${GOARCH}${ext}" .
+          go build -ldflags "-s -w -X github.com/Fracizz/invossh/cmd.Version=ci" -o "invossh-${GOOS}-${GOARCH}${ext}" .
       - uses: actions/upload-artifact@v4
         with:
-          name: sshctl-${{ matrix.goos }}-${{ matrix.goarch }}
-          path: sshctl-*
+          name: invossh-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: invossh-*

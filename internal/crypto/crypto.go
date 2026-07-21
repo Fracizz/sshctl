@@ -31,7 +31,7 @@ var (
 	bindMachineSet   bool
 )
 
-// IsEncrypted reports whether value uses sshctl ciphertext (v1 or v2).
+// IsEncrypted reports whether value uses invossh ciphertext (v1 or v2).
 func IsEncrypted(value string) bool {
 	return strings.HasPrefix(value, prefixV1) || strings.HasPrefix(value, prefixV2)
 }
@@ -66,7 +66,7 @@ func Decrypt(value string) (string, error) {
 	case strings.HasPrefix(value, prefixV2):
 		pw, ok := resolveMasterPassword()
 		if !ok || pw == "" {
-			return "", errors.New("enc:v2 requires master password (--master-password or SSHCTL_MASTER_PASSWORD)")
+			return "", errors.New("enc:v2 requires master password (--master-password or INVOSSH_MASTER_PASSWORD)")
 		}
 		return decryptV2(strings.TrimPrefix(value, prefixV2), pw, resolveBindMachine())
 	case strings.HasPrefix(value, prefixV1):
@@ -83,6 +83,9 @@ func resolveMasterPassword() (string, bool) {
 	if pw != "" {
 		return pw, true
 	}
+	if env := os.Getenv("INVOSSH_MASTER_PASSWORD"); env != "" {
+		return env, true
+	}
 	if env := os.Getenv("SSHCTL_MASTER_PASSWORD"); env != "" {
 		return env, true
 	}
@@ -96,12 +99,13 @@ func resolveBindMachine() bool {
 	if set {
 		return v
 	}
-	switch strings.ToLower(os.Getenv("SSHCTL_BIND_MACHINE")) {
-	case "1", "true", "yes", "on":
-		return true
-	default:
-		return false
+	for _, key := range []string{"INVOSSH_BIND_MACHINE", "SSHCTL_BIND_MACHINE"} {
+		switch strings.ToLower(os.Getenv(key)) {
+		case "1", "true", "yes", "on":
+			return true
+		}
 	}
+	return false
 }
 
 func encryptV1(plaintext string) (string, error) {
@@ -223,7 +227,7 @@ func machineMaterial() (string, error) {
 		username = u.Username
 	}
 	return strings.Join([]string{
-		"sshctl-v1",
+		"sshctl-v1", // stable KDF material; do not rename (breaks enc:v1)
 		runtime.GOOS,
 		runtime.GOARCH,
 		host,

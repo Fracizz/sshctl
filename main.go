@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/Fracizz/sshctl/cmd"
-	"github.com/Fracizz/sshctl/internal/exitcode"
+	"github.com/Fracizz/invossh/cmd"
+	"github.com/Fracizz/invossh/internal/exitcode"
 )
 
 func main() {

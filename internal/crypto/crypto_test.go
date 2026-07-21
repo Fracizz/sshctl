@@ -4,7 +4,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Fracizz/sshctl/internal/crypto"
+	"github.com/Fracizz/invossh/internal/crypto"
 )
 
 func TestEncryptDecryptV1Machine(t *testing.T) {
