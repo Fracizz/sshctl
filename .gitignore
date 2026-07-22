@@ -1,5 +1,6 @@
 # Binaries
 /bin/
+/skills/sshctl/bin/
 /dist/
 *.exe
 *.exe~

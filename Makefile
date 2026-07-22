@@ -14,13 +14,27 @@ test:
 	go test ./...
 
 dist: tidy
-	@mkdir -p dist
-	GOOS=linux   GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o dist/$(APP)-linux-amd64 .
-	GOOS=linux   GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o dist/$(APP)-linux-arm64 .
-	GOOS=windows GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o dist/$(APP)-windows-amd64.exe .
-	GOOS=windows GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o dist/$(APP)-windows-arm64.exe .
-	GOOS=darwin  GOARCH=amd64 go build -ldflags "$(LDFLAGS)" -o dist/$(APP)-darwin-amd64 .
-	GOOS=darwin  GOARCH=arm64 go build -ldflags "$(LDFLAGS)" -o dist/$(APP)-darwin-arm64 .
+	@rm -rf dist && mkdir -p dist
+	@tmpdir=$$(mktemp -d); \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	for pair in \
+		"linux:amd64:sshctl-linux-amd64" \
+		"linux:arm64:sshctl-linux-arm64" \
+		"windows:amd64:sshctl-windows-amd64" \
+		"windows:arm64:sshctl-windows-arm64" \
+		"darwin:amd64:sshctl-darwin-amd64" \
+		"darwin:arm64:sshctl-darwin-arm64"; do \
+		IFS=: read -r goos goarch name <<< "$$pair"; \
+		stage="$$tmpdir/$$name"; \
+		mkdir -p "$$stage"; \
+		if [ "$$goos" = "windows" ]; then \
+			out="$$stage/sshctl.exe"; \
+		else \
+			out="$$stage/sshctl"; \
+		fi; \
+		GOOS=$$goos GOARCH=$$goarch CGO_ENABLED=0 go build -ldflags "$(LDFLAGS)" -o "$$out" .; \
+		( cd "$$stage" && zip -q "$(CURDIR)/dist/$$name.zip" "$$(basename "$$out")" ); \
+	done
 
 clean:
 	rm -rf bin dist

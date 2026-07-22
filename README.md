@@ -35,27 +35,39 @@ Agent skill (Cursor / Claude / Codex): [skills/sshctl/SKILL.md](skills/sshctl/SK
 
 ## Install
 
+**For AI agents (recommended):** build the binary next to the skill — do **not** add sshctl to system PATH.
+
+```powershell
+git clone https://github.com/Fracizz/sshctl.git
+cd sshctl
+go build -o skills/sshctl/bin/sshctl.exe .
+# or: .\scripts\build.ps1   # also copies to bin/sshctl.exe
+```
+
+Agent skill: [skills/sshctl/SKILL.md](skills/sshctl/SKILL.md) — resolve and call:
+
+```powershell
+$skillRoot = '<repo>\skills\sshctl'
+$sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
+& $sshctl version
+```
+
+`skills/sshctl/bin/` is gitignored; clone from source or copy `sshctl.exe` from a [release zip](https://github.com/Fracizz/sshctl/releases).
+
+**General CLI use** (optional, not required for skills):
+
 ```bash
 go install github.com/Fracizz/sshctl@latest
 ```
 
-Or from source:
-
-```bash
-git clone https://github.com/Fracizz/sshctl.git
-cd sshctl
-go build -o bin/sshctl .
-```
-
-**Windows system install** (Administrator — adds `C:\Program Files\sshctl` to machine PATH):
+**Optional system PATH install (Windows, advanced):** Administrator PowerShell:
 
 ```powershell
-.\bin\sshctl.exe install
-# or
-powershell -File scripts/install.ps1
+.\skills\sshctl\bin\sshctl.exe install
+# or: powershell -File scripts/install.ps1
 ```
 
-Open a new terminal and run `sshctl version`.
+Open a new terminal only if you installed to PATH; skill workflows use the full path above.
 
 ## Quick start
 
@@ -187,16 +199,23 @@ MIT — see [LICENSE](LICENSE).
 
 ## 安装
 
-```bash
-go install github.com/Fracizz/sshctl@latest
-```
+**AI Agent（推荐）：** 二进制与技能同目录，**不**写入系统 PATH。
 
-或源码编译：
-
-```bash
+```powershell
 git clone https://github.com/Fracizz/sshctl.git
 cd sshctl
-go build -o bin/sshctl .
+go build -o skills/sshctl/bin/sshctl.exe .
+# 或 .\scripts\build.ps1
+```
+
+技能说明：[skills/sshctl/SKILL.md](skills/sshctl/SKILL.md) — 通过 `$sshctl = Join-Path $skillRoot 'bin\sshctl.exe'` 调用。
+
+`skills/sshctl/bin/` 不入库；克隆后需本地构建或从 [Releases](https://github.com/Fracizz/sshctl/releases) 复制 `sshctl.exe`。
+
+**通用 CLI（可选）：**
+
+```bash
+go install github.com/Fracizz/sshctl@latest
 ```
 
 ## 快速开始
