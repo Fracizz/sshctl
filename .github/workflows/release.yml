@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+      - name: Test
+        run: go test ./...
+      - name: Vet
+        run: go vet ./...
+
+  build:
+    needs: [test]
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - goos: linux
+            goarch: amd64
+          - goos: linux
+            goarch: arm64
+          - goos: windows
+            goarch: amd64
+          - goos: windows
+            goarch: arm64
+          - goos: darwin
+            goarch: amd64
+          - goos: darwin
+            goarch: arm64
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "1.23.x"
+      - name: Version from tag
+        id: ver
+        run: echo "version=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+      - name: Build and zip
+        env:
+          GOOS: ${{ matrix.goos }}
+          GOARCH: ${{ matrix.goarch }}
+          CGO_ENABLED: "0"
+          VERSION: ${{ steps.ver.outputs.version }}
+        run: |
+          name="sshctl-${GOOS}-${GOARCH}"
+          if [ "$GOOS" = "windows" ]; then
+            bin="sshctl.exe"
+          else
+            bin="sshctl"
+          fi
+          go build -ldflags "-s -w -X github.com/Fracizz/sshctl/cmd.Version=${VERSION}" -o "$bin" .
+          mkdir -p dist
+          zip -j "dist/${name}.zip" "$bin"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: sshctl-${{ matrix.goos }}-${{ matrix.goarch }}
+          path: dist/sshctl-*.zip
+
+  publish:
+    needs: [build]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+          pattern: sshctl-*
+          merge-multiple: true
+      - name: List assets
+        run: ls -la artifacts
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: artifacts/*.zip
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

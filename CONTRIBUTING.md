@@ -22,13 +22,16 @@ Optional lint (same as CI):
 golangci-lint run
 ```
 
-Multi-platform release zips (GitHub Releases only):
+Multi-platform release zips (GitHub Actions on tag):
 
-```powershell
-powershell -File scripts/release.ps1   # dist/sshctl-*.zip
+```bash
+# bump Version in cmd/root.go / scripts/build.ps1 as needed, then:
+git tag -a v0.2.2 -m "sshctl v0.2.2"
+git push origin v0.2.2
+# → .github/workflows/release.yml tests, builds 6 zips, creates GitHub Release
 ```
 
-CI builds per-platform binaries as workflow artifacts on push to `main`.
+CI on `main` / PRs still uploads per-platform build artifacts (not Release zips).
 
 ## Pull requests
 

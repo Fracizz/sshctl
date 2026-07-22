@@ -1,5 +1,5 @@
 # Local build: Windows amd64 only. Syncs into skill bins.
-# Multi-platform release zips: use scripts/release.ps1 (or GitHub Actions).
+# Multi-platform release zips: push a v* tag → GitHub Actions (.github/workflows/release.yml).
 $ErrorActionPreference = "Stop"
 $Version = if ($env:VERSION) { $env:VERSION } else { "0.2.1" }
 $ld = "-s -w -X github.com/Fracizz/sshctl/cmd.Version=$Version"

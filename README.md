@@ -55,7 +55,7 @@ $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 
 `skills/sshctl/bin/` is gitignored; clone from source or copy `sshctl.exe` from a [release zip](https://github.com/Fracizz/sshctl/releases).
 
-Multi-platform release packages: `.\scripts\release.ps1` or GitHub Actions artifacts (not for daily local builds).
+Multi-platform release packages: push a `v*` tag; GitHub Actions (`.github/workflows/release.yml`) builds zips and creates the Release.
 
 **General CLI use** (optional, not required for skills):
 

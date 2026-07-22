@@ -54,7 +54,7 @@ go build -o skills\sshctl\bin\sshctl.exe .
 
 `bin/` 下的 exe **不入库**。也可从 [Releases](https://github.com/Fracizz/sshctl/releases) 取 `sshctl-windows-amd64.zip`，把 `sshctl.exe` 放到 `$skillRoot\bin\`。
 
-多平台发布包用 `.\scripts\release.ps1` 或 GitHub Actions，**不要**日常本机构建。
+多平台发布包：推送 `v*` 标签，由 GitHub Actions（`release.yml`）打 zip 并创建 Release；**不要**本机打发布包。
 
 ### 验证
 
