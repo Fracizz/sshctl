@@ -6,12 +6,12 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Fracizz/sshfrac/internal/config"
+	"github.com/Fracizz/sshctl/internal/config"
 )
 
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "Create starter config at ~/.sshfrac/servers.json (no real secrets)",
+	Short: "Create starter config at ~/.sshctl/servers.json (no real secrets)",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := config.ResolvePath(cfgPath)
 		if _, err := os.Stat(path); err == nil {
@@ -20,7 +20,7 @@ var initCmd = &cobra.Command{
 		out := &config.File{}
 		if _, err := out.Add(config.Server{
 			Name:        "example-host",
-			Description: "示例：请 delete 后用 sshfrac add 写入真实主机（勿保留 REPLACE_ME）",
+			Description: "示例：请 delete 后用 sshctl add 写入真实主机（勿保留 REPLACE_ME）",
 			Host:        "192.0.2.10",
 			Port:        22,
 			User:        "root",
@@ -33,7 +33,7 @@ var initCmd = &cobra.Command{
 			return err
 		}
 		fmt.Printf("wrote %s\n", path)
-		fmt.Println("next: sshfrac add --host <ip> --user root --password <secret> --desc \"...\"")
+		fmt.Println("next: sshctl add --host <ip> --user root --password <secret> --desc \"...\"")
 		fmt.Println("      then remove the example-host entry from the JSON if unused")
 		return nil
 	},

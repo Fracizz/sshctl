@@ -7,7 +7,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Fracizz/sshfrac/internal/config"
+	"github.com/Fracizz/sshctl/internal/config"
 )
 
 var listSearch string
@@ -15,9 +15,9 @@ var listSearch string
 var listCmd = &cobra.Command{
 	Use:   "list",
 	Short: "List servers from the config file",
-	Example: `  sshfrac list
-  sshfrac list -s 157
-  sshfrac list --search 客制化`,
+	Example: `  sshctl list
+  sshctl list -s 157
+  sshctl list --search 客制化`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		path := config.ResolvePath(cfgPath)
 		f, err := config.Load(path)

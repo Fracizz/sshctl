@@ -1,6 +1,6 @@
-APP=sshfrac
-VERSION?=0.1.2
-LDFLAGS=-s -w -X github.com/Fracizz/sshfrac/cmd.Version=$(VERSION)
+APP=sshctl
+VERSION?=0.2.0
+LDFLAGS=-s -w -X github.com/Fracizz/sshctl/cmd.Version=$(VERSION)
 
 .PHONY: build dist tidy test clean
 

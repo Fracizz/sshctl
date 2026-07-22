@@ -6,15 +6,15 @@
 *.dll
 *.so
 *.dylib
-/sshfrac
-/sshfrac-*
+/sshctl
+/sshctl-*
 
 # Local secrets / machine config (never commit)
 servers.json
 *.local.json
 .sshctl/
-.invossh/
 .sshfrac/
+.invossh/
 hello.txt
 *.bak
 

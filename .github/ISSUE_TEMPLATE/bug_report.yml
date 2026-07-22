@@ -1,5 +1,5 @@
 name: Bug report
-description: Report a bug in sshfrac
+description: Report a bug in sshctl
 labels: ["bug"]
 body:
   - type: markdown
@@ -16,8 +16,8 @@ body:
   - type: input
     id: version
     attributes:
-      label: sshfrac version
-      placeholder: "sshfrac version"
+      label: sshctl version
+      placeholder: "sshctl version"
     validations:
       required: true
   - type: dropdown

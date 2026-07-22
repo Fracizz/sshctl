@@ -1,13 +1,13 @@
 # Contributing
 
-Thanks for contributing to sshfrac.
+Thanks for contributing to sshctl.
 
 ## Development
 
 ```bash
 go test ./...
 go vet ./...
-go build -o bin/sshfrac .
+go build -o bin/sshctl .
 ```
 
 Optional lint (same as CI):
@@ -28,7 +28,7 @@ powershell -File scripts/build.ps1
 
 - Keep changes focused.
 - Add/adjust tests for config, search, and crypto when behavior changes.
-- Never commit `~/.sshfrac/servers.json`, `bin/`, `dist/`, or real credentials.
+- Never commit `~/.sshctl/servers.json`, `~/.sshfrac/servers.json`, `bin/`, `dist/`, or real credentials.
 - Prefer English for new CLI help strings; README may stay bilingual.
 - Run `go test ./...` before opening a PR.
 

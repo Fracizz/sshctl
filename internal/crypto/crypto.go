@@ -31,7 +31,7 @@ var (
 	bindMachineSet   bool
 )
 
-// IsEncrypted reports whether value uses sshfrac ciphertext (v1 or v2).
+// IsEncrypted reports whether value uses sshctl ciphertext (v1 or v2).
 func IsEncrypted(value string) bool {
 	return strings.HasPrefix(value, prefixV1) || strings.HasPrefix(value, prefixV2)
 }
@@ -66,7 +66,7 @@ func Decrypt(value string) (string, error) {
 	case strings.HasPrefix(value, prefixV2):
 		pw, ok := resolveMasterPassword()
 		if !ok || pw == "" {
-			return "", errors.New("enc:v2 requires master password (--master-password or SSHFRAC_MASTER_PASSWORD)")
+			return "", errors.New("enc:v2 requires master password (--master-password or SSHCTL_MASTER_PASSWORD)")
 		}
 		return decryptV2(strings.TrimPrefix(value, prefixV2), pw, resolveBindMachine())
 	case strings.HasPrefix(value, prefixV1):
@@ -83,13 +83,13 @@ func resolveMasterPassword() (string, bool) {
 	if pw != "" {
 		return pw, true
 	}
+	if env := os.Getenv("SSHCTL_MASTER_PASSWORD"); env != "" {
+		return env, true
+	}
 	if env := os.Getenv("SSHFRAC_MASTER_PASSWORD"); env != "" {
 		return env, true
 	}
 	if env := os.Getenv("INVOSSH_MASTER_PASSWORD"); env != "" {
-		return env, true
-	}
-	if env := os.Getenv("SSHCTL_MASTER_PASSWORD"); env != "" {
 		return env, true
 	}
 	return "", false
@@ -102,7 +102,7 @@ func resolveBindMachine() bool {
 	if set {
 		return v
 	}
-	for _, key := range []string{"SSHFRAC_BIND_MACHINE", "INVOSSH_BIND_MACHINE", "SSHCTL_BIND_MACHINE"} {
+	for _, key := range []string{"SSHCTL_BIND_MACHINE", "SSHFRAC_BIND_MACHINE", "INVOSSH_BIND_MACHINE"} {
 		switch strings.ToLower(os.Getenv(key)) {
 		case "1", "true", "yes", "on":
 			return true

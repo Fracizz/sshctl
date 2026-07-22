@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Fracizz/sshfrac/internal/config"
+	"github.com/Fracizz/sshctl/internal/config"
 )
 
 var (

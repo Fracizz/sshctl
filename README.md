@@ -1,8 +1,8 @@
-# sshfrac
+# sshctl
 
-> Formerly `sshctl` / `invossh`. Legacy env (`SSHCTL_*`, `INVOSSH_*`) and config dirs (`~/.sshctl`, `~/.invossh`) are still accepted.
+> Formerly `sshfrac` / `invossh`. On first use, legacy `~/.sshfrac/servers.json` (or `~/.invossh/`) is **copied to** `~/.sshctl/servers.json` and the old file is renamed to `servers.json.bak`. Legacy env vars (`SSHFRAC_*`, `INVOSSH_*`) still work when set explicitly.
 
-**English** | [中文](#sshfrac-中文)
+**English** | [中文](#sshctl-中文)
 
 High-performance cross-platform SSH/SCP CLI with an encrypted local server inventory.
 
@@ -10,6 +10,8 @@ High-performance cross-platform SSH/SCP CLI with an encrypted local server inven
 > Stable, scriptable subcommands and JSON inventory make remote exec / SCP easy for tools to call without interactive prompts.
 
 Humans can use it too — the UX prioritizes machine-friendly flags, exit codes, and search (`-s`) over a rich TUI.
+
+Agent skill (Cursor / Claude / Codex): [skills/sshctl/SKILL.md](skills/sshctl/SKILL.md)
 
 ## Features
 
@@ -19,11 +21,12 @@ Humans can use it too — the UX prioritizes machine-friendly flags, exit codes,
 - AES-256-GCM encrypted passwords at rest (`enc:v1:`)
 - Case-insensitive contains search on name / IP / description
 - Host key verification via `~/.ssh/known_hosts` (optional `--insecure` for labs)
-- Default config outside the repo: `~/.sshfrac/servers.json`
+- Default config outside the repo: `~/.sshctl/servers.json`
+- One-time migration from `~/.sshfrac` / `~/.invossh` (automatic or `sshctl migrate`)
 
 ## Why AI-first?
 
-| Need | How sshfrac helps |
+| Need | How sshctl helps |
 |------|------------------|
 | Non-interactive | `exec` / `scp` / `list` / `search` — no TTY prompts for common flows |
 | Discover hosts | `search -s <keyword>` on name, IP, description |
@@ -33,47 +36,75 @@ Humans can use it too — the UX prioritizes machine-friendly flags, exit codes,
 ## Install
 
 ```bash
-go install github.com/Fracizz/sshfrac@latest
+go install github.com/Fracizz/sshctl@latest
 ```
 
 Or from source:
 
 ```bash
-git clone https://github.com/Fracizz/sshfrac.git
-cd sshfrac
-go build -o bin/sshfrac .
+git clone https://github.com/Fracizz/sshctl.git
+cd sshctl
+go build -o bin/sshctl .
 ```
+
+**Windows system install** (Administrator — adds `C:\Program Files\sshctl` to machine PATH):
+
+```powershell
+.\bin\sshctl.exe install
+# or
+powershell -File scripts/install.ps1
+```
+
+Open a new terminal and run `sshctl version`.
 
 ## Quick start
 
 ```bash
-# Create ~/.sshfrac/servers.json (placeholder only — no real secrets)
-sshfrac init
+# Create ~/.sshctl/servers.json (placeholder only — no real secrets)
+sshctl init
 
 # Add a host (password is encrypted on save)
-sshfrac add --name lab --host 192.0.2.10 --user root --password 'secret' --desc "lab box"
+sshctl add --name lab --host 192.0.2.10 --user root --password 'secret' --desc "lab box"
 
 # Or key-based auth
-sshfrac add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --desc "prod"
+sshctl add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --desc "prod"
 
-sshfrac list
-sshfrac search -s 192.0.2
-sshfrac exec lab -- hostname
-sshfrac shell lab
-sshfrac scp ./app.tar.gz lab:/tmp/app.tar.gz
+sshctl list
+sshctl search -s 192.0.2
+sshctl exec lab -- hostname
+sshctl shell lab
+sshctl scp ./app.tar.gz lab:/tmp/app.tar.gz
 ```
 
-Config path priority: `--config` > `$SSHFRAC_CONFIG` > `~/.sshfrac/servers.json`
+Config path priority: `--config` > `$SSHCTL_CONFIG` > `$SSHFRAC_CONFIG` > `~/.sshctl/servers.json`
+
+### Migrate from sshfrac / invossh
+
+If you still have `~/.sshfrac/servers.json` or `~/.invossh/servers.json` and `~/.sshctl/servers.json` does not exist yet:
+
+```bash
+sshctl migrate
+```
+
+Or run any command (`list`, `exec`, …) — migration runs automatically before the primary config is used.
+
+| Step | Result |
+|------|--------|
+| Copy | Legacy inventory → `~/.sshctl/servers.json` |
+| Backup | Legacy file renamed to `servers.json.bak` in the same directory |
+| Priority | First legacy source wins: `.sshfrac`, then `.invossh` |
+
+After migration, all commands use `~/.sshctl/servers.json` only (unless `--config` or `$SSHCTL_CONFIG` / `$SSHFRAC_CONFIG` overrides).
 
 ### Master password (enc:v2)
 
 ```bash
-export SSHFRAC_MASTER_PASSWORD='your-strong-secret'
+export SSHCTL_MASTER_PASSWORD='your-strong-secret'
 # optional: also bind ciphertext to this machine
-export SSHFRAC_BIND_MACHINE=1
+export SSHCTL_BIND_MACHINE=1
 
-sshfrac add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "lab"
-sshfrac exec lab -- hostname
+sshctl add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "lab"
+sshctl exec lab -- hostname
 ```
 
 Or pass `--master-password` / `--bind-machine` on each invocation. See [SECURITY.md](SECURITY.md).
@@ -88,9 +119,9 @@ Or pass `--master-password` / `--bind-machine` on each invocation. See [SECURITY
 | N | remote process status (`exec`) |
 
 ```bash
-sshfrac version
-sshfrac completion powershell > sshfrac.ps1
-sshfrac completion bash > /etc/bash_completion.d/sshfrac
+sshctl version
+sshctl completion powershell > sshctl.ps1
+sshctl completion bash > /etc/bash_completion.d/sshctl
 ```
 
 First SSH to a host should populate OpenSSH `known_hosts` (or pass `--insecure` only in trusted labs).
@@ -125,7 +156,7 @@ MIT — see [LICENSE](LICENSE).
 
 ---
 
-# sshfrac (中文)
+# sshctl (中文)
 
 高性能跨平台 SSH/SCP 命令行工具，带本地加密主机清单。
 
@@ -142,11 +173,12 @@ MIT — see [LICENSE](LICENSE).
 - 密码落盘 AES-256-GCM 加密（`enc:v1:`）
 - 对 name / IP / description 不区分大小写的包含搜索
 - 默认校验 `~/.ssh/known_hosts`（实验环境可用 `--insecure`）
-- 配置默认在仓库外：`~/.sshfrac/servers.json`
+- 配置默认在仓库外：`~/.sshctl/servers.json`
+- 从 `~/.sshfrac` / `~/.invossh` 一次性迁移（自动或 `sshctl migrate`）
 
 ## 为何适合 AI？
 
-| 需求 | sshfrac 的做法 |
+| 需求 | sshctl 的做法 |
 |------|----------------|
 | 非交互 | `exec` / `scp` / `list` / `search`，常见流程不弹密码提示 |
 | 找机器 | `search -s <关键词>` 匹配名称、IP、描述 |
@@ -156,40 +188,58 @@ MIT — see [LICENSE](LICENSE).
 ## 安装
 
 ```bash
-go install github.com/Fracizz/sshfrac@latest
+go install github.com/Fracizz/sshctl@latest
 ```
 
 或源码编译：
 
 ```bash
-git clone https://github.com/Fracizz/sshfrac.git
-cd sshfrac
-go build -o bin/sshfrac .
+git clone https://github.com/Fracizz/sshctl.git
+cd sshctl
+go build -o bin/sshctl .
 ```
 
 ## 快速开始
 
 ```bash
-sshfrac init
-sshfrac add --name lab --host 192.0.2.10 --user root --password 'secret' --desc "实验机"
-sshfrac add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --desc "生产"
+sshctl init
+sshctl add --name lab --host 192.0.2.10 --user root --password 'secret' --desc "实验机"
+sshctl add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --desc "生产"
 
-sshfrac list
-sshfrac search -s 192.0.2
-sshfrac exec lab -- hostname
-sshfrac shell lab
-sshfrac scp ./app.tar.gz lab:/tmp/app.tar.gz
+sshctl list
+sshctl search -s 192.0.2
+sshctl exec lab -- hostname
+sshctl shell lab
+sshctl scp ./app.tar.gz lab:/tmp/app.tar.gz
 ```
 
-配置优先级：`--config` > `$SSHFRAC_CONFIG` > `~/.sshfrac/servers.json`
+配置优先级：`--config` > `$SSHCTL_CONFIG` > `$SSHFRAC_CONFIG` > `~/.sshctl/servers.json`
+
+### 从 sshfrac / invossh 迁移
+
+若仍有 `~/.sshfrac/servers.json` 或 `~/.invossh/servers.json`，且尚未存在 `~/.sshctl/servers.json`：
+
+```bash
+sshctl migrate
+```
+
+或直接运行 `list`、`exec` 等命令——在使用主配置前会**自动迁移**。
+
+| 步骤 | 结果 |
+|------|------|
+| 复制 | 旧清单 → `~/.sshctl/servers.json` |
+| 备份 | 原文件同目录重命名为 `servers.json.bak` |
+| 顺序 | 优先 `.sshfrac`，其次 `.invossh` |
+
+迁移完成后默认只用 `~/.sshctl/servers.json`（除非 `--config` 或环境变量指定其他路径）。
 
 ### 主密码（enc:v2）
 
 ```bash
-export SSHFRAC_MASTER_PASSWORD='强密码'
-export SSHFRAC_BIND_MACHINE=1   # 可选：绑定本机
+export SSHCTL_MASTER_PASSWORD='强密码'
+export SSHCTL_BIND_MACHINE=1   # 可选：绑定本机
 
-sshfrac add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "实验机"
+sshctl add --name lab --host 192.0.2.10 --user root --password 'host-pass' --desc "实验机"
 ```
 
 详见 [SECURITY.md](SECURITY.md)。
@@ -203,8 +253,8 @@ sshfrac add --name lab --host 192.0.2.10 --user root --password 'host-pass' --de
 | N | 远端进程状态（`exec`） |
 
 ```bash
-sshfrac version
-sshfrac completion powershell > sshfrac.ps1
+sshctl version
+sshctl completion powershell > sshctl.ps1
 ```
 
 首次连接请先写入 OpenSSH `known_hosts`（或仅在可信实验环境使用 `--insecure`）。

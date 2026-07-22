@@ -1,4 +1,4 @@
-module github.com/Fracizz/sshfrac
+module github.com/Fracizz/sshctl
 
 go 1.23.0
 

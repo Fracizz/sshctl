@@ -6,7 +6,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/Fracizz/sshfrac/internal/crypto"
+	"github.com/Fracizz/sshctl/internal/crypto"
 )
 
 var (
@@ -15,27 +15,31 @@ var (
 	masterPassword string
 	bindMachine    bool
 	// Version is overwritten by -ldflags at build time.
-	Version = "0.1.2"
+	Version = "0.2.0"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "sshfrac",
+	Use:   "sshctl",
 	Short: "AI-friendly SSH/SCP CLI with encrypted server inventory",
-	Long: `sshfrac is a cross-platform SSH/SCP CLI designed primarily for AI agents.
+	Long: `sshctl is a cross-platform SSH/SCP CLI designed primarily for AI agents.
 
 Exit codes:
   0   success
   1   local runtime error (dial, decrypt, I/O, …)
   2   usage / config error
-  N   remote command exit status (sshfrac exec only, when available)
+  N   remote command exit status (sshctl exec only, when available)
 
 Master password (recommended on shared machines):
-  --master-password / SSHFRAC_MASTER_PASSWORD  → enc:v2 (Argon2id + AES-GCM)
-  --bind-machine / SSHFRAC_BIND_MACHINE=1      → also bind v2 keys to this machine
+  --master-password / SSHCTL_MASTER_PASSWORD  → enc:v2 (Argon2id + AES-GCM)
+  --bind-machine / SSHCTL_BIND_MACHINE=1      → also bind v2 keys to this machine
   Without a master password, new secrets use legacy enc:v1 (machine-derived).
 
+Install (Windows, Administrator):
+  sshctl install                 → C:\Program Files\sshctl\sshctl.exe + machine PATH
+  powershell -File scripts/install.ps1
+
 Shell completion:
-  sshfrac completion bash|zsh|fish|powershell`,
+  sshctl completion bash|zsh|fish|powershell`,
 	SilenceUsage:  true,
 	SilenceErrors: true,
 	Version:       Version,
@@ -59,13 +63,15 @@ func Execute() error {
 }
 
 func init() {
-	rootCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "path to servers JSON (default: ~/.sshfrac/servers.json or $SSHFRAC_CONFIG)")
+	rootCmd.PersistentFlags().StringVarP(&cfgPath, "config", "c", "", "path to servers JSON (default: ~/.sshctl/servers.json or $SSHCTL_CONFIG)")
 	rootCmd.PersistentFlags().BoolVar(&insecure, "insecure", false, "skip SSH host key verification (unsafe; for lab only)")
-	rootCmd.PersistentFlags().StringVar(&masterPassword, "master-password", "", "master password for enc:v2 (or set SSHFRAC_MASTER_PASSWORD)")
-	rootCmd.PersistentFlags().BoolVar(&bindMachine, "bind-machine", false, "mix machine identity into enc:v2 KDF (or SSHFRAC_BIND_MACHINE=1)")
+	rootCmd.PersistentFlags().StringVar(&masterPassword, "master-password", "", "master password for enc:v2 (or set SSHCTL_MASTER_PASSWORD)")
+	rootCmd.PersistentFlags().BoolVar(&bindMachine, "bind-machine", false, "mix machine identity into enc:v2 KDF (or SSHCTL_BIND_MACHINE=1)")
 
-	rootCmd.SetVersionTemplate("sshfrac {{.Version}}\n")
+	rootCmd.SetVersionTemplate("sshctl {{.Version}}\n")
 	rootCmd.AddCommand(versionCmd)
+	rootCmd.AddCommand(installCmd)
+	rootCmd.AddCommand(migrateCmd)
 	rootCmd.AddCommand(listCmd)
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(addCmd)
@@ -79,6 +85,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version",
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Printf("sshfrac %s\n", Version)
+		fmt.Printf("sshctl %s\n", Version)
 	},
 }

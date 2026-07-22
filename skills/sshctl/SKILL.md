@@ -17,6 +17,7 @@ description: |
 | 传文件 | `sshctl scp <src> <dst>` |
 | 写入清单 | `sshctl add --host ... --user ... --password '...'` |
 | 系统安装 | `sshctl install`（需管理员） |
+| 清单迁移 | `sshctl migrate`（或任意命令自动迁移） |
 
 ---
 

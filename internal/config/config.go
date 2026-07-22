@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/Fracizz/sshfrac/internal/crypto"
+	"github.com/Fracizz/sshctl/internal/crypto"
 )
 
 // Server is one SSH endpoint entry.
@@ -27,37 +27,19 @@ type File struct {
 	Servers []Server `json:"servers"`
 }
 
-// DefaultConfigPath returns ~/.sshfrac/servers.json (outside any repo).
-// Falls back to legacy ~/.invossh or ~/.sshctl if present.
-func DefaultConfigPath() string {
-	home, err := os.UserHomeDir()
-	if err != nil || home == "" {
-		return filepath.Join(".sshfrac", "servers.json")
-	}
-	primary := filepath.Join(home, ".sshfrac", "servers.json")
-	if _, err := os.Stat(primary); err == nil {
-		return primary
-	}
-	for _, dir := range []string{".invossh", ".sshctl"} {
-		legacy := filepath.Join(home, dir, "servers.json")
-		if _, err := os.Stat(legacy); err == nil {
-			return legacy
-		}
-	}
-	return primary
-}
-
-// ResolvePath picks config path: flag > SSHFRAC_CONFIG > INVOSSH_CONFIG > SSHCTL_CONFIG > default.
+// ResolvePath picks config path: flag > SSHCTL_CONFIG > SSHFRAC_CONFIG > INVOSSH_CONFIG > default.
+// Default path auto-migrates legacy ~/.sshfrac or ~/.invossh inventories to ~/.sshctl.
 func ResolvePath(flagPath string) string {
 	if flagPath != "" {
 		return flagPath
 	}
-	for _, key := range []string{"SSHFRAC_CONFIG", "INVOSSH_CONFIG", "SSHCTL_CONFIG"} {
+	for _, key := range []string{"SSHCTL_CONFIG", "SSHFRAC_CONFIG", "INVOSSH_CONFIG"} {
 		if env := os.Getenv(key); env != "" {
 			return env
 		}
 	}
-	return DefaultConfigPath()
+	_, _ = MigrateLegacy()
+	return PrimaryConfigPath()
 }
 
 // Load reads JSON, encrypts any plaintext passwords, and rewrites the file when needed.
@@ -181,7 +163,7 @@ func (f *File) Find(query string) (*Server, error) {
 	case 0:
 		return nil, fmt.Errorf("server not found: %s", query)
 	default:
-		return nil, fmt.Errorf("ambiguous server %q: %d matches (use sshfrac search -s %q)", query, len(hits), query)
+		return nil, fmt.Errorf("ambiguous server %q: %d matches (use sshctl search -s %q)", query, len(hits), query)
 	}
 }
 

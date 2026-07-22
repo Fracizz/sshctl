@@ -5,8 +5,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Fracizz/sshfrac/internal/config"
-	"github.com/Fracizz/sshfrac/internal/crypto"
+	"github.com/Fracizz/sshctl/internal/config"
+	"github.com/Fracizz/sshctl/internal/crypto"
 )
 
 func TestSearchCaseInsensitiveContains(t *testing.T) {
@@ -111,25 +111,66 @@ func TestDefaultConfigPathOutsideCwd(t *testing.T) {
 		t.Fatalf("base: %s", p)
 	}
 	dir := filepath.Base(filepath.Dir(p))
-	if dir != ".sshfrac" && dir != ".invossh" && dir != ".sshctl" {
+	if dir != ".sshctl" {
 		t.Fatalf("dir: %s", p)
 	}
 }
 
+func TestMigrateLegacyFromSshfrac(t *testing.T) {
+	home := t.TempDir()
+	t.Setenv("USERPROFILE", home)
+	t.Setenv("HOME", home)
+	legacyDir := filepath.Join(home, ".sshfrac")
+	if err := os.MkdirAll(legacyDir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	legacyPath := filepath.Join(legacyDir, "servers.json")
+	raw := `{"servers":[{"name":"lab","host":"192.0.2.10","port":22,"user":"root","password":"","os":"Linux"}]}`
+	if err := os.WriteFile(legacyPath, []byte(raw), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	from, err := config.MigrateLegacy()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if from != legacyPath {
+		t.Fatalf("from: %q", from)
+	}
+	primary := config.PrimaryConfigPath()
+	if _, err := os.Stat(primary); err != nil {
+		t.Fatalf("primary missing: %v", err)
+	}
+	if _, err := os.Stat(legacyPath); err == nil {
+		t.Fatal("legacy file should be renamed")
+	}
+	if _, err := os.Stat(legacyPath + ".bak"); err != nil {
+		t.Fatalf("backup missing: %v", err)
+	}
+	_, err = config.MigrateLegacy()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
+
 func TestResolvePathPriority(t *testing.T) {
+	t.Setenv("SSHCTL_CONFIG", "")
 	t.Setenv("SSHFRAC_CONFIG", "")
 	t.Setenv("INVOSSH_CONFIG", "")
-	t.Setenv("SSHCTL_CONFIG", "")
 	if got := config.ResolvePath("/tmp/custom.json"); got != "/tmp/custom.json" {
 		t.Fatalf("flag: %s", got)
 	}
-	t.Setenv("SSHFRAC_CONFIG", "/env/servers.json")
-	if got := config.ResolvePath(""); got != "/env/servers.json" {
-		t.Fatalf("env: %s", got)
+	t.Setenv("SSHCTL_CONFIG", "/primary/servers.json")
+	if got := config.ResolvePath(""); got != "/primary/servers.json" {
+		t.Fatalf("primary env: %s", got)
+	}
+	t.Setenv("SSHCTL_CONFIG", "")
+	t.Setenv("SSHFRAC_CONFIG", "/legacy/sshfrac.json")
+	if got := config.ResolvePath(""); got != "/legacy/sshfrac.json" {
+		t.Fatalf("legacy sshfrac env: %s", got)
 	}
 	t.Setenv("SSHFRAC_CONFIG", "")
-	t.Setenv("SSHCTL_CONFIG", "/legacy/servers.json")
-	if got := config.ResolvePath(""); got != "/legacy/servers.json" {
-		t.Fatalf("legacy env: %s", got)
+	t.Setenv("INVOSSH_CONFIG", "/legacy/invossh.json")
+	if got := config.ResolvePath(""); got != "/legacy/invossh.json" {
+		t.Fatalf("legacy invossh env: %s", got)
 	}
 }
