@@ -15,7 +15,7 @@ var (
 	masterPassword string
 	bindMachine    bool
 	// Version is overwritten by -ldflags at build time.
-	Version = "0.2.0"
+	Version = "0.2.1"
 )
 
 var rootCmd = &cobra.Command{
@@ -34,9 +34,12 @@ Master password (recommended on shared machines):
   --bind-machine / SSHCTL_BIND_MACHINE=1      → also bind v2 keys to this machine
   Without a master password, new secrets use legacy enc:v1 (machine-derived).
 
-Install (Windows, Administrator):
-  sshctl install                 → C:\Program Files\sshctl\sshctl.exe + machine PATH
-  powershell -File scripts/install.ps1
+Skill / agent workflow (preferred):
+  put binary next to SKILL.md as bin/sshctl.exe (see skills/sshctl/)
+  local build: powershell -File scripts/build.ps1
+
+Optional system PATH install (advanced, Administrator):
+  sshctl install
 
 Shell completion:
   sshctl completion bash|zsh|fish|powershell`,

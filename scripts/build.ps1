@@ -1,6 +1,7 @@
-# Cross-build sshctl for Linux / Windows / macOS and package release zips.
+# Local build: Windows amd64 only. Syncs into skill bins.
+# Multi-platform release zips: use scripts/release.ps1 (or GitHub Actions).
 $ErrorActionPreference = "Stop"
-$Version = if ($env:VERSION) { $env:VERSION } else { "0.2.0" }
+$Version = if ($env:VERSION) { $env:VERSION } else { "0.2.1" }
 $ld = "-s -w -X github.com/Fracizz/sshctl/cmd.Version=$Version"
 $go = "go"
 if (Test-Path "C:\Program Files\Go\bin\go.exe") {
@@ -8,78 +9,25 @@ if (Test-Path "C:\Program Files\Go\bin\go.exe") {
     $go = "C:\Program Files\Go\bin\go.exe"
 }
 
-if (Test-Path dist) {
-    Remove-Item -Recurse -Force dist
-}
-New-Item -ItemType Directory -Force -Path dist | Out-Null
 New-Item -ItemType Directory -Force -Path bin | Out-Null
-$skillBinDir = Join-Path "skills" (Join-Path "sshctl" "bin")
-$skillRoot = Join-Path "skills" "sshctl"
-$hasSkillDir = Test-Path $skillRoot
-if ($hasSkillDir) {
-    New-Item -ItemType Directory -Force -Path $skillBinDir | Out-Null
-}
+$out = Join-Path bin "sshctl.exe"
+Write-Host "building $out"
+& $go build -ldflags $ld -o $out .
 
 $targets = @(
-    @{ GOOS = "linux"; GOARCH = "amd64"; Name = "sshctl-linux-amd64" },
-    @{ GOOS = "linux"; GOARCH = "arm64"; Name = "sshctl-linux-arm64" },
-    @{ GOOS = "windows"; GOARCH = "amd64"; Name = "sshctl-windows-amd64" },
-    @{ GOOS = "windows"; GOARCH = "arm64"; Name = "sshctl-windows-arm64" },
-    @{ GOOS = "darwin"; GOARCH = "amd64"; Name = "sshctl-darwin-amd64" },
-    @{ GOOS = "darwin"; GOARCH = "arm64"; Name = "sshctl-darwin-arm64" }
+    (Join-Path "skills" (Join-Path "sshctl" "bin")),
+    (Join-Path $env:USERPROFILE ".claude\skills\sshctl\bin"),
+    (Join-Path $env:USERPROFILE ".codex\skills\sshctl\bin")
 )
-
-$stagingRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("sshctl-build-" + [guid]::NewGuid().ToString("n"))
-New-Item -ItemType Directory -Force -Path $stagingRoot | Out-Null
-try {
-    foreach ($t in $targets) {
-        $env:GOOS = $t.GOOS
-        $env:GOARCH = $t.GOARCH
-        $env:CGO_ENABLED = "0"
-
-        $releaseName = if ($t.GOOS -eq "windows") { "sshctl.exe" } else { "sshctl" }
-        $stageDir = Join-Path $stagingRoot $t.Name
-        New-Item -ItemType Directory -Force -Path $stageDir | Out-Null
-        $stagePath = Join-Path $stageDir $releaseName
-
-        Write-Host "building $stagePath"
-        & $go build -ldflags $ld -o $stagePath .
-
-        $zipPath = Join-Path dist "$($t.Name).zip"
-        if (Test-Path $zipPath) {
-            Remove-Item -Force $zipPath
-        }
-        Compress-Archive -Path $stagePath -DestinationPath $zipPath
-        Write-Host "packaged $zipPath"
-
-        if ($t.GOOS -eq "windows" -and $t.GOARCH -eq "amd64") {
-            Copy-Item $stagePath (Join-Path bin "sshctl.exe") -Force
-            if ($hasSkillDir) {
-                Copy-Item $stagePath (Join-Path $skillBinDir "sshctl.exe") -Force
-            }
-            $externalSkillBins = @(
-                (Join-Path $env:USERPROFILE ".claude\skills\sshctl\bin"),
-                (Join-Path $env:USERPROFILE ".codex\skills\sshctl\bin")
-            )
-            foreach ($externalBin in $externalSkillBins) {
-                $externalSkillRoot = Split-Path $externalBin -Parent
-                if (Test-Path $externalSkillRoot) {
-                    New-Item -ItemType Directory -Force -Path $externalBin | Out-Null
-                    Copy-Item $stagePath (Join-Path $externalBin "sshctl.exe") -Force
-                    Write-Host "copied to $(Join-Path $externalBin 'sshctl.exe')"
-                }
-            }
-        }
+foreach ($binDir in $targets) {
+    $skillRoot = Split-Path $binDir -Parent
+    if (-not (Test-Path $skillRoot)) {
+        continue
     }
-} finally {
-    Remove-Item Env:GOOS, Env:GOARCH -ErrorAction SilentlyContinue
-    if (Test-Path $stagingRoot) {
-        Remove-Item -Recurse -Force $stagingRoot
-    }
+    New-Item -ItemType Directory -Force -Path $binDir | Out-Null
+    $dest = Join-Path $binDir "sshctl.exe"
+    Copy-Item $out $dest -Force
+    Write-Host "copied $dest"
 }
 
-if ($hasSkillDir) {
-    Write-Host "done sshctl $Version (dist/*.zip, bin/sshctl.exe, skills/sshctl/bin/sshctl.exe, external skill bins if present)"
-} else {
-    Write-Host "done sshctl $Version (dist/*.zip, bin/sshctl.exe, external skill bins if present)"
-}
+Write-Host "done sshctl $Version"

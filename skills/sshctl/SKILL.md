@@ -13,8 +13,8 @@ description: |
 **Agent 必须**通过技能目录下的二进制调用，**不要**假设 `sshctl` 在系统 PATH 中。
 
 ```powershell
-# skillRoot = 本 SKILL.md 所在目录（Agent 从附带的技能文件路径解析，勿用仓库根或硬编码绝对路径）
-$skillRoot = '...'  # 本技能：skills/sshctl/（相对仓库）或 ~/.claude/skills/sshctl/ 等
+# skillRoot = 本 SKILL.md 所在目录（从附带技能文件路径解析，禁止硬编码仓库路径）
+$skillRoot = '...'  # 例：skills/sshctl/ 或 %USERPROFILE%\.claude\skills\sshctl\
 $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 & $sshctl version
 ```
@@ -26,59 +26,42 @@ $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 | 交互 shell | `& $sshctl shell <host>` |
 | 传文件 | `& $sshctl scp <src> <dst>` |
 | 写入清单 | `& $sshctl add --host ... --user ... --password '...'` |
-| 清单迁移 | `& $sshctl migrate`（或任意命令自动迁移） |
+| 清单迁移 | `& $sshctl migrate` |
 
 ---
 
-## 二进制位置（推荐）
-
-技能与二进制同目录，**不写入系统 PATH**：
+## 二进制（与 skill 同目录）
 
 | 项 | 路径 |
 |----|------|
 | skillRoot | 本 `SKILL.md` 所在文件夹 |
 | 二进制 | `$skillRoot\bin\sshctl.exe` |
-| 仓库内示例 | `skills/sshctl/bin/sshctl.exe`（克隆后本地构建） |
-| Claude 技能 | `%USERPROFILE%\.claude\skills\sshctl\bin\sshctl.exe` |
-| Codex 技能 | `%USERPROFILE%\.codex\skills\sshctl\bin\sshctl.exe` |
 
-### 构建 / 更新二进制
+### 构建 / 更新
 
-在仓库根目录：
+在仓库根目录（仅 Windows amd64；会同步到仓库 skill 与已存在的 `.claude` / `.codex` skill `bin\`）：
 
 ```powershell
-$env:VERSION = '0.2.0'
+$env:VERSION = '0.2.1'
 .\scripts\build.ps1
-# → skills/sshctl/bin/sshctl.exe
-# → 若存在 ~/.claude/skills/sshctl/ 或 ~/.codex/skills/sshctl/，同步复制 bin/sshctl.exe
 ```
 
-或仅构建技能二进制：
+或：
 
 ```powershell
 go build -o skills\sshctl\bin\sshctl.exe .
 ```
 
-`skills/sshctl/bin/sshctl.exe` 已加入 `.gitignore`，**不入库**；克隆后需本地构建或从 [Releases](https://github.com/Fracizz/sshctl/releases) 解压 `sshctl-windows-amd64.zip` 中的 `sshctl.exe` 到 `$skillRoot\bin\`。
+`bin/` 下的 exe **不入库**。也可从 [Releases](https://github.com/Fracizz/sshctl/releases) 取 `sshctl-windows-amd64.zip`，把 `sshctl.exe` 放到 `$skillRoot\bin\`。
+
+多平台发布包用 `.\scripts\release.ps1` 或 GitHub Actions，**不要**日常本机构建。
 
 ### 验证
 
 ```powershell
-& $sshctl version    # 0.2.0+
+& $sshctl version    # 0.2.1+
 & $sshctl list
 ```
-
-### 可选：系统 PATH 安装（高级）
-
-仅当需要全局 `sshctl` 命令时，以**管理员 PowerShell**运行：
-
-```powershell
-& $sshctl install
-# 或 .\scripts\install.ps1
-# → C:\Program Files\sshctl\sshctl.exe + 机器 PATH
-```
-
-技能工作流**默认不用**此方式。
 
 ---
 
@@ -86,14 +69,12 @@ go build -o skills\sshctl\bin\sshctl.exe .
 
 | 项 | 路径 / 变量 |
 |----|-------------|
-| 清单（默认） | `%USERPROFILE%\.sshctl\servers.json` |
-| 从 sshfrac 迁移 | `& $sshctl migrate`（或任意命令自动迁移） |
-| Legacy 备份 | 迁移后 `~/.sshfrac/servers.json.bak` |
+| 清单 | `%USERPROFILE%\.sshctl\servers.json` |
+| 迁移 | `& $sshctl migrate`（`~/.sshfrac` → `~/.sshctl`，旧文件改 `.bak`） |
 | 覆盖 | `$SSHCTL_CONFIG` |
-| Legacy 环境变量 | `$SSHFRAC_CONFIG` 仍可读（显式指定时） |
-| 主密码 | `$SSHCTL_MASTER_PASSWORD`、`$SSHCTL_BIND_MACHINE=1` |
+| Legacy | `$SSHFRAC_CONFIG`（显式指定时） |
 
-**规则：** 每个 IP 仅一条；`add` 同 IP 覆盖；密码含特殊字符须完整引号包裹。
+**规则：** 每个 IP 仅一条；`add` 同 IP 覆盖；密码特殊字符须完整引号包裹。
 
 ---
 
@@ -101,7 +82,6 @@ go build -o skills\sshctl\bin\sshctl.exe .
 
 ```powershell
 & $sshctl migrate
-& $sshctl init
 & $sshctl list
 & $sshctl search -s 192.168
 & $sshctl add --host 192.168.x.x --user administrator --password '...' --os Windows --desc "说明"
@@ -109,7 +89,7 @@ go build -o skills\sshctl\bin\sshctl.exe .
 & $sshctl scp .\a.txt 192.168.x.x:C:/temp/a.txt
 ```
 
-**Agent 流程：** `search -s` → 不在清单则 `add`（密码/账号向用户确认）→ `exec` / `scp`。
+**Agent 流程：** `search -s` → 不在清单则 `add`（向用户确认凭据）→ `exec` / `scp`。
 
 ---
 
@@ -117,14 +97,14 @@ go build -o skills\sshctl\bin\sshctl.exe .
 
 | 情况 | 处理 |
 |------|------|
-| 找不到 sshctl | 构建到 `$skillRoot\bin\sshctl.exe`，或从 Release zip 复制到该目录 |
+| 找不到 sshctl | 构建/复制到 `$skillRoot\bin\sshctl.exe` |
 | duplicate host | `add` 同 IP 覆盖，或删 JSON 重复项 |
-| Windows 密码失败 | 确认密码完整；`--os Windows`；v0.2.0+ |
-| 仍用旧名 sshfrac | 运行 `& $sshctl migrate`；legacy 备份为 `servers.json.bak` |
+| Windows 密码失败 | 确认密码完整；`--os Windows`；v0.2.1+ |
+| 仍用旧清单目录 | `& $sshctl migrate` |
 
 ## 边界
 
-- 远程操作只用 sshctl，不用原生 ssh/scp
-- 不安装到系统 PATH（技能工作流）
-- 配免密 / 查免密 → 使用 **ssh-key-auth-setup** 技能
-- 清单不入库；不擅自改他人 authorized_keys
+- 远程操作只用 `$sshctl`，不用原生 ssh/scp
+- **不**安装到系统 PATH（技能工作流）
+- 配免密 → **ssh-key-auth-setup**
+- 清单不入库

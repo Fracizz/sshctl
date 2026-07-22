@@ -41,7 +41,7 @@ Agent skill (Cursor / Claude / Codex): [skills/sshctl/SKILL.md](skills/sshctl/SK
 git clone https://github.com/Fracizz/sshctl.git
 cd sshctl
 go build -o skills/sshctl/bin/sshctl.exe .
-# or: .\scripts\build.ps1   # also copies to bin/ and external ~/.claude|~/.codex skill bins if present
+# or: .\scripts\build.ps1   # Windows amd64 → bin/ + skill bins (~/.claude|~/.codex if present)
 ```
 
 Agent skill: [skills/sshctl/SKILL.md](skills/sshctl/SKILL.md) — resolve from the skill file directory (not repo root):
@@ -55,20 +55,13 @@ $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 
 `skills/sshctl/bin/` is gitignored; clone from source or copy `sshctl.exe` from a [release zip](https://github.com/Fracizz/sshctl/releases).
 
+Multi-platform release packages: `.\scripts\release.ps1` or GitHub Actions artifacts (not for daily local builds).
+
 **General CLI use** (optional, not required for skills):
 
 ```bash
 go install github.com/Fracizz/sshctl@latest
 ```
-
-**Optional system PATH install (Windows, advanced):** Administrator PowerShell:
-
-```powershell
-.\skills\sshctl\bin\sshctl.exe install
-# or: powershell -File scripts/install.ps1
-```
-
-Open a new terminal only if you installed to PATH; skill workflows use the full path above.
 
 ## Quick start
 
