@@ -57,8 +57,8 @@ $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 
 | Platform | Asset |
 |----------|--------|
-| Windows amd64 / arm64 | `sshctl-windows-amd64.exe` / `sshctl-windows-arm64.exe` |
-| Linux amd64 / arm64 | `sshctl-linux-amd64` / `sshctl-linux-arm64` |
+| Windows x64 / ARM64 | `sshctl-windows-amd64.exe` / `sshctl-windows-arm64.exe` |
+| Linux x64 / ARM64 | `sshctl-linux-amd64` / `sshctl-linux-arm64` |
 | macOS Intel / Apple Silicon | `sshctl-darwin-amd64` / `sshctl-darwin-arm64` |
 
 Multi-platform release: push a `v*` tag; GitHub Actions builds the six binaries and attaches them to the Release.

@@ -15,7 +15,7 @@ var (
 	masterPassword string
 	bindMachine    bool
 	// Version is overwritten by -ldflags at build time.
-	Version = "0.2.4"
+	Version = "0.2.5"
 )
 
 var rootCmd = &cobra.Command{
