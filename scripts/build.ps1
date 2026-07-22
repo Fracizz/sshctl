@@ -1,7 +1,7 @@
 # Local build: Windows amd64 only. Syncs into skill bins.
 # Multi-platform release zips: push a v* tag → GitHub Actions (.github/workflows/release.yml).
 $ErrorActionPreference = "Stop"
-$Version = if ($env:VERSION) { $env:VERSION } else { "0.2.2" }
+$Version = if ($env:VERSION) { $env:VERSION } else { "0.2.3" }
 $ld = "-s -w -X github.com/Fracizz/sshctl/cmd.Version=$Version"
 $go = "go"
 if (Test-Path "C:\Program Files\Go\bin\go.exe") {

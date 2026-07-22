@@ -1,5 +1,5 @@
 APP=sshctl
-VERSION?=0.2.2
+VERSION?=0.2.3
 LDFLAGS=-s -w -X github.com/Fracizz/sshctl/cmd.Version=$(VERSION)
 
 .PHONY: build tidy test clean

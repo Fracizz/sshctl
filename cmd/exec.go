@@ -3,12 +3,12 @@ package cmd
 import (
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
 	"github.com/spf13/cobra"
 
 	"github.com/Fracizz/sshctl/internal/config"
+	"github.com/Fracizz/sshctl/internal/shellquote"
 	"github.com/Fracizz/sshctl/internal/sshx"
 )
 
@@ -45,7 +45,8 @@ var execCmd = &cobra.Command{
 			return err
 		}
 		defer client.Close()
-		code, err := sshx.Run(client, strings.Join(remoteArgs, " "))
+		// 多参数必须 shell quote，否则 bash -lc "cd x && y" 会被拼成 bash -lc cd x && y
+		code, err := sshx.Run(client, shellquote.JoinRemoteCommand(remoteArgs))
 		if err != nil {
 			return err
 		}

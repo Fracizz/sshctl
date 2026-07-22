@@ -42,7 +42,7 @@ $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 在仓库根目录（仅 Windows amd64；会同步到仓库 skill 与已存在的 `.claude` / `.codex` skill `bin\`）：
 
 ```powershell
-$env:VERSION = '0.2.1'
+$env:VERSION = '0.2.3'
 .\scripts\build.ps1
 ```
 
@@ -59,7 +59,7 @@ go build -o skills\sshctl\bin\sshctl.exe .
 ### 验证
 
 ```powershell
-& $sshctl version    # 0.2.1+
+& $sshctl version    # 0.2.3+
 & $sshctl list
 ```
 
@@ -86,6 +86,8 @@ go build -o skills\sshctl\bin\sshctl.exe .
 & $sshctl search -s 192.168
 & $sshctl add --host 192.168.x.x --user administrator --password '...' --os Windows --desc "说明"
 & $sshctl exec 192.168.x.x -- "hostname && whoami"
+# 多参数会做 shell quote，可安全使用 bash -lc
+& $sshctl exec 192.168.x.x -- bash -lc 'cd /tmp && pwd'
 & $sshctl scp .\a.txt 192.168.x.x:C:/temp/a.txt
 ```
 
@@ -100,6 +102,7 @@ go build -o skills\sshctl\bin\sshctl.exe .
 | 找不到 sshctl | 构建/复制到 `$skillRoot\bin\sshctl.exe` |
 | duplicate host | `add` 同 IP 覆盖，或删 JSON 重复项 |
 | Windows 密码失败 | 确认密码完整；`--os Windows`；v0.2.1+ |
+| `bash -lc` 路径错乱 | 需 v0.2.3+（多参数已 shell quote） |
 | 仍用旧清单目录 | `& $sshctl migrate` |
 
 ## 边界

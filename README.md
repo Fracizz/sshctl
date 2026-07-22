@@ -78,6 +78,10 @@ sshctl add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --d
 sshctl list
 sshctl search -s 192.0.2
 sshctl exec lab -- hostname
+# multi-arg: each arg is shell-quoted (safe for bash -lc / paths with spaces)
+sshctl exec lab -- bash -lc 'cd /tmp && pwd'
+# single-arg: passed through so shell operators like && remain intact
+sshctl exec lab -- 'cd /tmp && pwd'
 sshctl shell lab
 sshctl scp ./app.tar.gz lab:/tmp/app.tar.gz
 ```
@@ -222,6 +226,10 @@ sshctl add --name prod --host 192.0.2.11 --user root --key ~/.ssh/id_ed25519 --d
 sshctl list
 sshctl search -s 192.0.2
 sshctl exec lab -- hostname
+# 多参数会逐项 shell quote，可安全使用 bash -lc / 含空格路径
+sshctl exec lab -- bash -lc 'cd /tmp && pwd'
+# 单参数原样传递，保留 && 等 shell 语法
+sshctl exec lab -- 'cd /tmp && pwd'
 sshctl shell lab
 sshctl scp ./app.tar.gz lab:/tmp/app.tar.gz
 ```
