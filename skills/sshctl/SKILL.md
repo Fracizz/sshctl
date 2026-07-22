@@ -2,7 +2,7 @@
 name: sshctl
 description: |
   sshctl 远程主机 CLI（清单 search/exec/shell/scp/add/migrate）。优先 sshctl，尽量不用原生 ssh/scp。
-  二进制与技能同目录（skills/sshctl/bin/sshctl.exe），不安装到系统 PATH。
+  二进制与技能同目录（SKILL.md 所在文件夹下的 bin/sshctl.exe），不安装到系统 PATH。
   触发词：sshctl、search -s、exec、shell、scp、servers.json、SSHCTL、.sshctl。
 ---
 
@@ -13,7 +13,8 @@ description: |
 **Agent 必须**通过技能目录下的二进制调用，**不要**假设 `sshctl` 在系统 PATH 中。
 
 ```powershell
-$skillRoot = 'D:\WorkSpace\code\sshctl\skills\sshctl'
+# skillRoot = 本 SKILL.md 所在目录（Agent 从附带的技能文件路径解析，勿用仓库根或硬编码绝对路径）
+$skillRoot = '...'  # 本技能：skills/sshctl/（相对仓库）或 ~/.claude/skills/sshctl/ 等
 $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 & $sshctl version
 ```
@@ -33,24 +34,32 @@ $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 
 技能与二进制同目录，**不写入系统 PATH**：
 
-| 路径 | 说明 |
-|------|------|
-| 技能二进制 | `skills/sshctl/bin/sshctl.exe`（相对仓库根） |
-| 绝对路径（本机 dev） | `D:\WorkSpace\code\sshctl\skills\sshctl\bin\sshctl.exe` |
-| 开发快捷路径 | `bin/sshctl.exe`（`build.ps1` 同步产出，可选） |
+| 项 | 路径 |
+|----|------|
+| skillRoot | 本 `SKILL.md` 所在文件夹 |
+| 二进制 | `$skillRoot\bin\sshctl.exe` |
+| 仓库内示例 | `skills/sshctl/bin/sshctl.exe`（克隆后本地构建） |
+| Claude 技能 | `%USERPROFILE%\.claude\skills\sshctl\bin\sshctl.exe` |
+| Codex 技能 | `%USERPROFILE%\.codex\skills\sshctl\bin\sshctl.exe` |
 
 ### 构建 / 更新二进制
 
+在仓库根目录：
+
 ```powershell
-cd D:\WorkSpace\code\sshctl
-$env:GOROOT = 'C:\Program Files\Go'
-& 'C:\Program Files\Go\bin\go.exe' build -o skills\sshctl\bin\sshctl.exe .
-# 或 build.ps1（同步 bin/ 与 skills/sshctl/bin/）：
 $env:VERSION = '0.2.0'
 .\scripts\build.ps1
+# → skills/sshctl/bin/sshctl.exe
+# → 若存在 ~/.claude/skills/sshctl/ 或 ~/.codex/skills/sshctl/，同步复制 bin/sshctl.exe
 ```
 
-`skills/sshctl/bin/sshctl.exe` 已加入 `.gitignore`，**不入库**；克隆后需本地构建或从 [Releases](https://github.com/Fracizz/sshctl/releases) 解压 `sshctl-windows-amd64.zip` 中的 `sshctl.exe` 到该目录。
+或仅构建技能二进制：
+
+```powershell
+go build -o skills\sshctl\bin\sshctl.exe .
+```
+
+`skills/sshctl/bin/sshctl.exe` 已加入 `.gitignore`，**不入库**；克隆后需本地构建或从 [Releases](https://github.com/Fracizz/sshctl/releases) 解压 `sshctl-windows-amd64.zip` 中的 `sshctl.exe` 到 `$skillRoot\bin\`。
 
 ### 验证
 
@@ -104,24 +113,11 @@ $env:VERSION = '0.2.0'
 
 ---
 
-## 打包 / 开发
-
-```powershell
-cd D:\WorkSpace\code\sshctl
-$env:VERSION = '0.2.0'
-.\scripts\build.ps1          # bin\sshctl.exe + skills\sshctl\bin\sshctl.exe
-go build -o skills\sshctl\bin\sshctl.exe .
-```
-
-仓库：https://github.com/Fracizz/sshctl（模块名 `github.com/Fracizz/sshctl`）
-
----
-
 ## 错误速查
 
 | 情况 | 处理 |
 |------|------|
-| 找不到 sshctl | 构建到 `skills\sshctl\bin\sshctl.exe`，或从 Release zip 复制 |
+| 找不到 sshctl | 构建到 `$skillRoot\bin\sshctl.exe`，或从 Release zip 复制到该目录 |
 | duplicate host | `add` 同 IP 覆盖，或删 JSON 重复项 |
 | Windows 密码失败 | 确认密码完整；`--os Windows`；v0.2.0+ |
 | 仍用旧名 sshfrac | 运行 `& $sshctl migrate`；legacy 备份为 `servers.json.bak` |

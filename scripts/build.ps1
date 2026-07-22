@@ -57,6 +57,18 @@ try {
             if ($hasSkillDir) {
                 Copy-Item $stagePath (Join-Path $skillBinDir "sshctl.exe") -Force
             }
+            $externalSkillBins = @(
+                (Join-Path $env:USERPROFILE ".claude\skills\sshctl\bin"),
+                (Join-Path $env:USERPROFILE ".codex\skills\sshctl\bin")
+            )
+            foreach ($externalBin in $externalSkillBins) {
+                $externalSkillRoot = Split-Path $externalBin -Parent
+                if (Test-Path $externalSkillRoot) {
+                    New-Item -ItemType Directory -Force -Path $externalBin | Out-Null
+                    Copy-Item $stagePath (Join-Path $externalBin "sshctl.exe") -Force
+                    Write-Host "copied to $(Join-Path $externalBin 'sshctl.exe')"
+                }
+            }
         }
     }
 } finally {
@@ -67,7 +79,7 @@ try {
 }
 
 if ($hasSkillDir) {
-    Write-Host "done sshctl $Version (dist/*.zip, bin/sshctl.exe, skills/sshctl/bin/sshctl.exe)"
+    Write-Host "done sshctl $Version (dist/*.zip, bin/sshctl.exe, skills/sshctl/bin/sshctl.exe, external skill bins if present)"
 } else {
-    Write-Host "done sshctl $Version (dist/*.zip only)"
+    Write-Host "done sshctl $Version (dist/*.zip, bin/sshctl.exe, external skill bins if present)"
 }

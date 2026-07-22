@@ -41,13 +41,14 @@ Agent skill (Cursor / Claude / Codex): [skills/sshctl/SKILL.md](skills/sshctl/SK
 git clone https://github.com/Fracizz/sshctl.git
 cd sshctl
 go build -o skills/sshctl/bin/sshctl.exe .
-# or: .\scripts\build.ps1   # also copies to bin/sshctl.exe
+# or: .\scripts\build.ps1   # also copies to bin/ and external ~/.claude|~/.codex skill bins if present
 ```
 
-Agent skill: [skills/sshctl/SKILL.md](skills/sshctl/SKILL.md) — resolve and call:
+Agent skill: [skills/sshctl/SKILL.md](skills/sshctl/SKILL.md) — resolve from the skill file directory (not repo root):
 
 ```powershell
-$skillRoot = '<repo>\skills\sshctl'
+# skillRoot = directory containing SKILL.md (agent resolves from attached skill path)
+$skillRoot = '...'  # e.g. skills/sshctl/ or ~/.claude/skills/sshctl/
 $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 & $sshctl version
 ```
@@ -208,7 +209,7 @@ go build -o skills/sshctl/bin/sshctl.exe .
 # 或 .\scripts\build.ps1
 ```
 
-技能说明：[skills/sshctl/SKILL.md](skills/sshctl/SKILL.md) — 通过 `$sshctl = Join-Path $skillRoot 'bin\sshctl.exe'` 调用。
+技能说明：[skills/sshctl/SKILL.md](skills/sshctl/SKILL.md) — `$skillRoot` 为本 `SKILL.md` 所在目录，通过 `$sshctl = Join-Path $skillRoot 'bin\sshctl.exe'` 调用。
 
 `skills/sshctl/bin/` 不入库；克隆后需本地构建或从 [Releases](https://github.com/Fracizz/sshctl/releases) 复制 `sshctl.exe`。
 
