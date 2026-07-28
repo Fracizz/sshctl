@@ -95,7 +95,27 @@ $env:VERSION = '0.2.6'
 & $sshctl scp .\a.txt 192.168.x.x:C:/temp/a.txt
 ```
 
-**Agent 流程：** `search -s` → 不在清单则 `add`（向用户确认凭据）→ `exec` / `scp`。
+**Agent 流程：** `search -s` → 不在清单则 `add`（向用户确认凭据）→ `exec` / `scp`。首次连某主机若 host key 失败，见下节。
+
+---
+
+## 首次连接 / host key
+
+默认校验 OpenSSH `~/.ssh/known_hosts`。新主机未写入时，`exec` / `scp` / `shell` 会失败（`unknown host key` / Handshake failed）。sshctl **不会**交互确认或自动写入 host key。
+
+| 场景 | 处理 |
+|------|------|
+| 可信实验网 / 临时连通测试 | `& $sshctl --insecure exec <host> -- "..."`（跳过校验；**不**写入 known_hosts） |
+| 正式环境 | 先用本机 OpenSSH 连一次写入 known_hosts，之后正常 `exec`，无需 `--insecure` |
+
+```powershell
+# 首次连通（仅可信环境）
+& $sshctl --insecure exec 192.168.x.x -- "hostname && uname -r"
+# known_hosts 已有记录后
+& $sshctl exec 192.168.x.x -- "hostname"
+```
+
+`--insecure` 是跳过校验，不是「自动接受并永久信任」。
 
 ---
 
@@ -107,6 +127,7 @@ $env:VERSION = '0.2.6'
 | duplicate host | `add` 同 IP 覆盖，或删 JSON 重复项 |
 | Windows 密码失败 | 确认密码完整；`--os Windows`；v0.2.1+ |
 | `bash -lc` 路径错乱 | 需 v0.2.3+（多参数已 shell quote） |
+| unknown host key / Handshake failed | 首次连接；可信环境加 `--insecure`，或先写入 known_hosts |
 | 仍用旧清单目录 | `& $sshctl migrate` |
 
 ## 边界
@@ -115,3 +136,4 @@ $env:VERSION = '0.2.6'
 - **不**安装到系统 PATH（技能工作流）
 - 配免密 → **ssh-key-auth-setup**
 - 清单不入库
+- 非可信网络避免 `--insecure`
