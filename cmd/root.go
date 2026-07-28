@@ -15,7 +15,7 @@ var (
 	masterPassword string
 	bindMachine    bool
 	// Version is overwritten by -ldflags at build time.
-	Version = "0.2.5"
+	Version = "0.2.6"
 )
 
 var rootCmd = &cobra.Command{
@@ -76,6 +76,7 @@ func init() {
 	rootCmd.AddCommand(installCmd)
 	rootCmd.AddCommand(migrateCmd)
 	rootCmd.AddCommand(listCmd)
+	rootCmd.AddCommand(skillsCmd)
 	rootCmd.AddCommand(searchCmd)
 	rootCmd.AddCommand(addCmd)
 	rootCmd.AddCommand(execCmd)

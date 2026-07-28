@@ -1,9 +1,9 @@
 ---
 name: sshctl
 description: |
-  sshctl 远程主机 CLI（清单 search/exec/shell/scp/add/migrate）。优先 sshctl，尽量不用原生 ssh/scp。
+  sshctl 远程主机 CLI（清单 search/exec/shell/scp/add/migrate/skills）。优先 sshctl，尽量不用原生 ssh/scp。
   二进制与技能同目录（SKILL.md 所在文件夹下的 bin/sshctl.exe），不安装到系统 PATH。
-  触发词：sshctl、search -s、exec、shell、scp、servers.json、SSHCTL、.sshctl。
+  触发词：sshctl、search -s、exec、shell、scp、skills、servers.json、SSHCTL、.sshctl。
 ---
 
 # sshctl · 远程主机 CLI（Windows）
@@ -27,6 +27,7 @@ $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 | 传文件 | `& $sshctl scp <src> <dst>` |
 | 写入清单 | `& $sshctl add --host ... --user ... --password '...'` |
 | 清单迁移 | `& $sshctl migrate` |
+| 列 skills | `& $sshctl skills` / `& $sshctl skills -s sshctl` |
 
 ---
 
@@ -42,25 +43,27 @@ $sshctl = Join-Path $skillRoot 'bin\sshctl.exe'
 在仓库根目录交叉编译 6 平台可执行文件，同步到仓库 skill 与已存在的 `.claude` / `.cursor` / `.codex` skill `bin\`：
 
 ```powershell
-$env:VERSION = '0.2.5'
+$env:VERSION = '0.2.6'
 .\scripts\build.ps1
 ```
 
-`bin/` 下二进制 **不入库**。也可从 [Releases](https://github.com/Fracizz/sshctl/releases) 直接下载可执行文件（非 zip）：
+`bin/` 下二进制 **不入库**。也可从 [Releases](https://github.com/Fracizz/sshctl/releases) 获取：
 
-| 平台 | 资源名 |
-|------|--------|
-| Windows x64 | `sshctl-windows-amd64.exe`（Agent 用可再复制为 `sshctl.exe`） |
-| Windows ARM64 | `sshctl-windows-arm64.exe` |
-| Linux x64 / ARM64 | `sshctl-linux-amd64` / `sshctl-linux-arm64` |
-| macOS Intel / Apple Silicon | `sshctl-darwin-amd64` / `sshctl-darwin-arm64` |
+| 资源 | 说明 |
+|------|------|
+| `sshctl-skill.zip` | **AI skills 整包**：解压到 `~/.claude/skills/` / `~/.cursor/skills/` / `~/.codex/skills/` |
+| `sshctl-windows-amd64.exe` | Windows x64（Agent 默认可作 `bin/sshctl.exe`） |
+| `sshctl-windows-arm64.exe` | Windows ARM64 |
+| `sshctl-linux-amd64` / `sshctl-linux-arm64` | Linux x64 / ARM64 |
+| `sshctl-darwin-amd64` / `sshctl-darwin-arm64` | macOS Intel / Apple Silicon |
 
-多平台发布：推送 `v*` 标签，由 GitHub Actions 构建上述可执行文件并创建 Release。
+多平台发布：推送 `v*` 标签，由 GitHub Actions 构建裸二进制 + `sshctl-skill.zip`。
 
 ### 验证
 
 ```powershell
-& $sshctl version    # 0.2.5+
+& $sshctl version    # 0.2.6+
+& $sshctl skills -s sshctl
 & $sshctl list
 ```
 

@@ -74,25 +74,35 @@ jobs:
     needs: [build]
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with:
           path: artifacts
           pattern: sshctl-*
           merge-multiple: true
-      - name: List assets
+      - name: Pack AI skill zip
         run: |
+          set -euo pipefail
           ls -la artifacts
-          # 仅保留可执行文件，排除任何 zip
-          find artifacts -type f -name '*.zip' -delete
-          find artifacts -type f | sort
+          mkdir -p skillpack/sshctl/bin
+          cp skills/sshctl/SKILL.md skillpack/sshctl/SKILL.md
+          cp artifacts/sshctl-windows-amd64.exe skillpack/sshctl/bin/
+          cp artifacts/sshctl-windows-arm64.exe skillpack/sshctl/bin/
+          cp artifacts/sshctl-linux-amd64 skillpack/sshctl/bin/
+          cp artifacts/sshctl-linux-arm64 skillpack/sshctl/bin/
+          cp artifacts/sshctl-darwin-amd64 skillpack/sshctl/bin/
+          cp artifacts/sshctl-darwin-arm64 skillpack/sshctl/bin/
+          cp artifacts/sshctl-windows-amd64.exe skillpack/sshctl/bin/sshctl.exe
+          (cd skillpack && zip -r ../artifacts/sshctl-skill.zip sshctl)
+          ls -la artifacts
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          # Windows: sshctl-windows-amd64.exe；其它: sshctl-linux-amd64 等
           files: |
             artifacts/sshctl-windows-*.exe
             artifacts/sshctl-linux-*
             artifacts/sshctl-darwin-*
+            artifacts/sshctl-skill.zip
           generate_release_notes: true
           body: |
             ## Binaries
@@ -108,6 +118,12 @@ jobs:
             | macOS Intel | `sshctl-darwin-amd64` |
             | macOS Apple Silicon | `sshctl-darwin-arm64` |
 
-            Agent skill (Windows): rename to `sshctl.exe` and place under `skills/sshctl/bin/`.
+            ## AI skill pack
+
+            | Asset | Install |
+            |-------|---------|
+            | `sshctl-skill.zip` | Unzip into `~/.claude/skills/`, `~/.cursor/skills/`, or `~/.codex/skills/` (creates `.../skills/sshctl/` with `SKILL.md` + `bin/`) |
+
+            Windows Agent default binary: `bin/sshctl.exe` (same as windows-amd64).
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
