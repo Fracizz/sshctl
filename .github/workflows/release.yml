@@ -105,7 +105,9 @@ jobs:
             artifacts/sshctl-skill.zip
           generate_release_notes: true
           body: |
-            ## Binaries
+            ## English
+
+            ### Binaries
 
             Download the executable for your platform (no zip):
 
@@ -118,12 +120,35 @@ jobs:
             | macOS Intel | `sshctl-darwin-amd64` |
             | macOS Apple Silicon | `sshctl-darwin-arm64` |
 
-            ## AI skill pack
+            ### AI skill pack
 
             | Asset | Install |
             |-------|---------|
             | `sshctl-skill.zip` | Unzip into `~/.claude/skills/`, `~/.cursor/skills/`, or `~/.codex/skills/` (creates `.../skills/sshctl/` with `SKILL.md` + `bin/`) |
 
             Windows Agent default binary: `bin/sshctl.exe` (same as windows-amd64).
+
+            ## 中文
+
+            ### 二进制
+
+            按平台直接下载可执行文件（非 zip）：
+
+            | 平台 | 资源 |
+            |------|------|
+            | Windows amd64 | `sshctl-windows-amd64.exe` |
+            | Windows arm64 | `sshctl-windows-arm64.exe` |
+            | Linux amd64 | `sshctl-linux-amd64` |
+            | Linux arm64 | `sshctl-linux-arm64` |
+            | macOS Intel | `sshctl-darwin-amd64` |
+            | macOS Apple Silicon | `sshctl-darwin-arm64` |
+
+            ### AI skills 整包
+
+            | 资源 | 安装方式 |
+            |------|----------|
+            | `sshctl-skill.zip` | 解压到 `~/.claude/skills/`、`~/.cursor/skills/` 或 `~/.codex/skills/`（得到 `.../skills/sshctl/`，含 `SKILL.md` 与 `bin/`） |
+
+            Windows Agent 默认二进制：`bin/sshctl.exe`（与 windows-amd64 相同）。
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
