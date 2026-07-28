@@ -77,8 +77,37 @@ $env:VERSION = '0.2.6'
 | 迁移 | `& $sshctl migrate`（`~/.sshfrac` → `~/.sshctl`，旧文件改 `.bak`） |
 | 覆盖 | `$SSHCTL_CONFIG` |
 | Legacy | `$SSHFRAC_CONFIG`（显式指定时） |
+| 主密码 | `--master-password` / `$SSHCTL_MASTER_PASSWORD` → `enc:v2` |
+| 机器绑定 | `--bind-machine` / `$SSHCTL_BIND_MACHINE=1` → v2 密钥混入本机身份 |
 
 **规则：** 每个 IP 仅一条；`add` 同 IP 覆盖；密码特殊字符须完整引号包裹。
+
+### 清单密码加密（对称）
+
+清单里的 SSH 密码以对称加密存放（AES-GCM），不入库明文。
+
+| 方案 | 条件 | 说明 |
+|------|------|------|
+| `enc:v1` | 未设主密码（默认） | 密钥由本机材料派生；同用户可读 |
+| `enc:v2` | 设了主密码 | Argon2id + AES-GCM；更安全 |
+| `enc:v2` + 机器绑定 | 另开 `--bind-machine` | 密文换机不可解（即使主密码相同） |
+
+**Agent 建议（须反问用户后再设）：**
+
+1. **建议默认开启** `enc:v2` + `--bind-machine`（或 `$SSHCTL_BIND_MACHINE=1`）。
+2. 首次 `add` / 改加密相关设置前，**反问用户**确认：是否设主密码、是否绑定本机；用户同意后再写 env 或带 flag。
+3. 主密码用环境变量传入，**不要**写入仓库、skill、对话日志或命令历史明文提交。
+4. 已用某种绑定方式写入的条目，后续 `exec` / `list` 须用相同主密码与 bind 设置，否则解密失败。
+
+```powershell
+# 用户确认后示例（主密码走环境变量）
+$env:SSHCTL_MASTER_PASSWORD = '...'   # 由用户提供，勿硬编码进脚本入库
+$env:SSHCTL_BIND_MACHINE = '1'
+& $sshctl add --host 192.168.x.x --user root --password '...' --desc "..."
+& $sshctl exec 192.168.x.x -- "hostname"
+```
+
+换机或关闭 bind 后旧 `enc:v2` 密文可能无法解密，需重新 `add`。
 
 ---
 
@@ -95,7 +124,7 @@ $env:VERSION = '0.2.6'
 & $sshctl scp .\a.txt 192.168.x.x:C:/temp/a.txt
 ```
 
-**Agent 流程：** `search -s` → 不在清单则 `add`（向用户确认凭据）→ `exec` / `scp`。首次连某主机若 host key 失败，见下节。
+**Agent 流程：** `search -s` → 不在清单则 `add`（确认凭据；**反问**是否启用主密码 + 机器绑定，建议默认开）→ `exec` / `scp`。首次连某主机若 host key 失败，见上节「首次连接」。
 
 ---
 
@@ -128,6 +157,7 @@ $env:VERSION = '0.2.6'
 | Windows 密码失败 | 确认密码完整；`--os Windows`；v0.2.1+ |
 | `bash -lc` 路径错乱 | 需 v0.2.3+（多参数已 shell quote） |
 | unknown host key / Handshake failed | 首次连接；可信环境加 `--insecure`，或先写入 known_hosts |
+| decrypt failed / enc:v2 requires master password | 补上相同主密码与 `--bind-machine` 设置；或重新 `add` |
 | 仍用旧清单目录 | `& $sshctl migrate` |
 
 ## 边界
@@ -135,5 +165,6 @@ $env:VERSION = '0.2.6'
 - 远程操作只用 `$sshctl`，不用原生 ssh/scp
 - **不**安装到系统 PATH（技能工作流）
 - 配免密 → **ssh-key-auth-setup**
-- 清单不入库
+- 清单不入库；主密码不入库、不写入 skill
+- 加密：建议默认 `enc:v2` + 机器绑定，**须反问用户**后启用
 - 非可信网络避免 `--insecure`
