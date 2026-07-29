@@ -37,10 +37,11 @@ Do **not** open a public issue for credential leaks or remote code execution.
 
 **Recommendations**
 
-1. Prefer **enc:v2** with a strong master password on shared or multi-user machines.
-2. Optionally set `--bind-machine` / `SSHCTL_BIND_MACHINE=1` so ciphertext will not decrypt on another host even with the same master password.
-3. Agents should pass the master password via env, not commit it.
-4. Do not use `--insecure` outside trusted labs.
-5. Prefer SSH public keys (`key_file`) over passwords when possible.
+1. **Default / agents:** use **enc:v1** (no master password). Local use is seamless; copying `servers.json` to another machine fails to decrypt — that is the intended anti-share behavior.
+2. Prefer **enc:v2** with a strong master password only on shared or multi-user machines, or when the user explicitly wants a portable secret they control.
+3. Optionally set `--bind-machine` / `SSHCTL_BIND_MACHINE=1` with enc:v2 so ciphertext will not decrypt on another host even with the same master password.
+4. Agents must not ask for a master password by default; if using enc:v2, pass it via env, never commit it.
+5. Do not use `--insecure` outside trusted labs.
+6. Prefer SSH public keys (`key_file`) over passwords when possible.
 
 OS keychain integration is not built-in; wrap sshctl with a script that loads the secret from your keychain into `SSHCTL_MASTER_PASSWORD`.

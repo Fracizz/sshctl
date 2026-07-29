@@ -77,8 +77,8 @@ $env:VERSION = '0.2.6'
 | 迁移 | `& $sshctl migrate`（`~/.sshfrac` → `~/.sshctl`，旧文件改 `.bak`） |
 | 覆盖 | `$SSHCTL_CONFIG` |
 | Legacy | `$SSHFRAC_CONFIG`（显式指定时） |
-| 主密码 | `--master-password` / `$SSHCTL_MASTER_PASSWORD` → `enc:v2` |
-| 机器绑定 | `--bind-machine` / `$SSHCTL_BIND_MACHINE=1` → v2 密钥混入本机身份 |
+| 主密码（可选） | `--master-password` / `$SSHCTL_MASTER_PASSWORD` → 才走 `enc:v2`；默认不需要 |
+| 机器绑定（仅 v2） | `--bind-machine` / `$SSHCTL_BIND_MACHINE=1`；`enc:v1` 已本机绑定 |
 
 **规则：** 每个 IP 仅一条；`add` 同 IP 覆盖；密码特殊字符须完整引号包裹。
 
@@ -88,28 +88,31 @@ $env:VERSION = '0.2.6'
 
 | 方案 | 条件 | 说明 |
 |------|------|------|
-| `enc:v1` | 未设主密码（默认） | 密钥由本机材料派生；同用户可读 |
-| `enc:v2` | 设了主密码 | Argon2id + AES-GCM；更安全 |
-| `enc:v2` + 机器绑定 | 另开 `--bind-machine` | 密文换机不可解（即使主密码相同） |
+| `enc:v1`（**默认推荐**） | 不设主密码 | 密钥由本机材料派生；**本机无感**；把 `servers.json` 拷到其他机器会解密失败 |
+| `enc:v2` | 显式设主密码 | Argon2id + AES-GCM；适合多用户/共享机，需每次能拿到主密码 |
+| `enc:v2` + 机器绑定 | 另开 `--bind-machine` | 换机即使主密码相同也不可解 |
 
-**Agent 策略：只反问一次，之后默认沿用。**
+**设计意图（默认路径）：** 加密只为「分享/拷贝 JSON 到别的机器失效」；日常本机 `add` / `exec` / `scp` **不要**向用户要主密码，也不要设 `SSHCTL_MASTER_PASSWORD`。
 
-1. **推荐默认**：`enc:v2` + `--bind-machine`（或 `$SSHCTL_BIND_MACHINE=1`）。
-2. **仅首次**需要加密偏好时反问一次（建议默认开；可答「默认」/「以后全部默认」/「跳过加密增强」）。
-3. 用户答「默认」或「以后全部默认」后：本会话及后续任务**不再反问**是否开启，一律按 `enc:v2` + 机器绑定执行；仅当环境里还没有主密码时，**只再要一次主密码**（写入 `$SSHCTL_MASTER_PASSWORD`，本机会话复用）。
-4. 用户答「跳过加密增强」后：后续用 `enc:v1`，也不再反复问（除非用户主动改口）。
-5. 主密码用环境变量传入，**不要**写入仓库、skill、对话日志或命令历史明文提交。
-6. 已用某种绑定方式写入的条目，后续 `exec` / `list` 须用相同主密码与 bind 设置，否则解密失败。
+**Agent 策略：**
+
+1. **默认用 `enc:v1`**：不设主密码、不问主密码、不设 `SSHCTL_BIND_MACHINE`（v1 已绑定本机）。
+2. **不要**把 `enc:v2` 当默认；仅当用户明确要求「主密码 / enc:v2 / 更强保护」时再启用。
+3. 若环境里**已经**有 `SSHCTL_MASTER_PASSWORD`（用户自管），则沿用 `enc:v2`，读写保持一致；仍勿把密码写入仓库或 skill。
+4. 已是 `enc:v2` 的条目缺主密码时：提示补 env 或对该主机重新 `add`（可改回无感的 v1）；**不要**反复追问「要不要开加密」。
 
 ```powershell
-# 用户已确认「默认」后（主密码仅首次向用户要一次）
-$env:SSHCTL_MASTER_PASSWORD = '...'   # 由用户提供，勿硬编码进脚本入库
-$env:SSHCTL_BIND_MACHINE = '1'
+# 默认无感（enc:v1，拷到别的机器失效）
 & $sshctl add --host 192.168.x.x --user root --password '...' --desc "..."
 & $sshctl exec 192.168.x.x -- "hostname"
+
+# 仅用户明确要求主密码时
+$env:SSHCTL_MASTER_PASSWORD = '...'   # 用户自管，勿入库
+$env:SSHCTL_BIND_MACHINE = '1'        # 可选
+& $sshctl add --host 192.168.x.x --user root --password '...' --desc "..."
 ```
 
-换机或关闭 bind 后旧 `enc:v2` 密文可能无法解密，需重新 `add`。
+换机后旧 `enc:v1` / 绑定机的 `enc:v2` 密文无法解密，需在新机器重新 `add`。
 
 ---
 
@@ -126,7 +129,7 @@ $env:SSHCTL_BIND_MACHINE = '1'
 & $sshctl scp .\a.txt 192.168.x.x:C:/temp/a.txt
 ```
 
-**Agent 流程：** `search -s` → 不在清单则 `add`（确认凭据；加密偏好**只反问一次**，之后默认 `enc:v2`+机器绑定）→ `exec` / `scp`。首次连某主机若 host key 失败，见下节「首次连接」。
+**Agent 流程：** `search -s` → 不在清单则 `add`（确认凭据；**默认 enc:v1 无感**，勿要主密码）→ `exec` / `scp`。首次连某主机若 host key 失败，见下节「首次连接」。
 
 ---
 
@@ -167,6 +170,6 @@ $env:SSHCTL_BIND_MACHINE = '1'
 - 远程操作只用 `$sshctl`，不用原生 ssh/scp
 - **不**安装到系统 PATH（技能工作流）
 - 配免密 → **ssh-key-auth-setup**
-- 清单不入库；主密码不入库、不写入 skill
-- 加密：建议默认 `enc:v2` + 机器绑定；**只反问一次**，答「默认/以后全部默认」后不再问
+- 清单不入库；勿把主密码写入 skill / 仓库
+- 加密默认 `enc:v1`（本机无感、拷贝 JSON 换机失效）；`enc:v2` 仅用户明确要求时用
 - 非可信网络避免 `--insecure`
